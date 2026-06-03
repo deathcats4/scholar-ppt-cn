@@ -14,6 +14,14 @@
 
 `scholar-ppt-cn` is an AI academic PPT workflow skill for Codex / ChatGPT. It helps turn papers, theses, reports, figures, notes, reference templates, screenshots, or visual mockups into planned academic presentations and editable PowerPoint decks.
 
+## Template Download
+
+The repository includes a 5-slide reference PowerPoint template:
+
+[Download scholar-ppt-cn-reference-template.pptx](assets/templates/scholar-ppt-cn-reference-template.pptx)
+
+Use it as the visual reference when creating Chinese academic presentations with this skill.
+
 Core idea:
 
 提纲决定讲述顺序；详细版式库决定页面结构；模板 DNA 决定视觉风格；image model 或 Python 负责生成。

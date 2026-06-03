@@ -22,6 +22,10 @@ The user may say:
 
 Do not ask the user to understand internal route names, archetype names, or QA gates unless they ask.
 
+## Bundled reference template
+
+If the user does not provide a separate template and wants a ready visual reference, use `assets/templates/scholar-ppt-cn-reference-template.pptx` as the default academic PPT template. Treat it as a reference template for Template DNA extraction, layout rhythm, typography, color system, and reusable page structures.
+
 ## Main workflow
 
 The default workflow is:
