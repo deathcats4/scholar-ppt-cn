@@ -69,7 +69,7 @@ def _font_roots() -> list[Path]:
     ]
 
 
-def _font_inventory() -> dict[str, Any]:
+def _font_inventory() -> tuple[dict[str, Any], list[str]]:
     names: list[str] = []
     for root in _font_roots():
         if not root.exists():
@@ -82,12 +82,17 @@ def _font_inventory() -> dict[str, Any]:
         for name in normalized
         if any(hint in name.casefold() for hint in CJK_FONT_HINTS)
     ]
-    return {
-        "available": bool(matches),
-        "provider": matches[0] if matches else None,
-        "notes": f"Detected {len(normalized)} font files; CJK candidates: {len(matches)}",
-        "cjk_candidates": matches[:30],
-    }
+    return (
+        {
+            "available": bool(matches),
+            "provider": matches[0] if matches else None,
+            "notes": (
+                f"Detected {len(normalized)} font files; "
+                f"CJK candidates: {len(matches)}"
+            ),
+        },
+        matches[:30],
+    )
 
 
 def probe() -> dict[str, Any]:
@@ -117,7 +122,8 @@ def probe() -> dict[str, Any]:
             "provider": module if available else None,
             "notes": f"Python module {'available' if available else 'not installed'}: {module}",
         }
-    capabilities["cjk_fonts"] = _font_inventory()
+    cjk_fonts, cjk_font_candidates = _font_inventory()
+    capabilities["cjk_fonts"] = cjk_fonts
     capabilities["image_generation"] = {
         "available": None,
         "provider": None,
@@ -137,6 +143,9 @@ def probe() -> dict[str, Any]:
             "python": platform.python_version(),
         },
         "capabilities": capabilities,
+        "details": {
+            "cjk_font_candidates": cjk_font_candidates,
+        },
     }
 
 

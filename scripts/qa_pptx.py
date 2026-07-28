@@ -294,7 +294,8 @@ def inspect_pptx(path: Path, project: dict[str, Any] | None = None) -> dict[str,
         security_parts = sorted(
             name
             for name in names
-            if (
+            if not name.endswith("/")
+            and (
                 "vbaproject" in name.casefold()
                 or "/activex/" in name.casefold()
                 or "/embeddings/" in name.casefold()

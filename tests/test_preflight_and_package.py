@@ -16,6 +16,12 @@ class PreflightAndPackageTests(unittest.TestCase):
         report = probe()
         self.assertIn("python", report["capabilities"])
         self.assertTrue(report["capabilities"]["filesystem"]["available"])
+        for capability in report["capabilities"].values():
+            self.assertEqual(
+                {"available", "provider", "notes"},
+                set(capability),
+            )
+        self.assertIn("cjk_font_candidates", report["details"])
 
     def test_release_version_filter(self) -> None:
         self.assertTrue(re_safe_version("3.4.0-dev"))

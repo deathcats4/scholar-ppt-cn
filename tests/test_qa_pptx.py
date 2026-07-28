@@ -84,6 +84,26 @@ class PptxQaTests(unittest.TestCase):
             codes = {item["code"] for item in report["issues"]}
             self.assertIn("pptx.shape_outside", codes)
 
+    def test_empty_embeddings_directory_is_not_content(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "empty-embeddings.pptx"
+            make_pptx(path)
+            with zipfile.ZipFile(path, "a") as archive:
+                archive.writestr("ppt/embeddings/", b"")
+            report = inspect_pptx(path)
+            codes = {item["code"] for item in report["issues"]}
+            self.assertNotIn("pptx.embedded_content", codes)
+
+    def test_embedding_file_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "embedded-file.pptx"
+            make_pptx(path)
+            with zipfile.ZipFile(path, "a") as archive:
+                archive.writestr("ppt/embeddings/data.bin", b"test")
+            report = inspect_pptx(path)
+            codes = {item["code"] for item in report["issues"]}
+            self.assertIn("pptx.embedded_content", codes)
+
     def test_qa_report_updates_project_state(self) -> None:
         fixture = (
             Path(__file__).resolve().parents[1]
