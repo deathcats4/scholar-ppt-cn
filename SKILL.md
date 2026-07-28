@@ -15,8 +15,12 @@ Keep one simple user-facing workflow. Accept natural-language requests such as:
 - "先做几页视觉样板。"
 - "修改第 4 页和第 7 页并重新检查。"
 
-Infer facts from supplied files and the runtime. Ask only when missing information
-would materially change the result and cannot be inferred.
+Infer discoverable facts from supplied files and the runtime. Ask when a
+subjective preference or a quality/time tradeoff would materially change the
+result, even if an agent could make a plausible guess. Useful questions include
+template choice, whether to approve representative samples before full
+production, target duration/page count, and whether to install a helpful
+dependency. Bundle related choices into one short question when practical.
 
 When a useful dependency is missing, state its purpose and ask whether to install
 it. If the user declines, continue with the strongest available fallback.
@@ -33,7 +37,8 @@ Use one adaptive workflow:
 3. Create or update a versioned `project.json`.
 4. Select or extract Template DNA.
 5. Plan the narrative, slides, evidence, and layouts.
-6. Add a family blueprint or visual samples only when they are useful.
+6. Ask whether to use representative samples when they would reduce visual
+   uncertainty; add a family blueprint or samples according to that decision.
 7. Create the requested artifact with the available host tools.
 8. Run deterministic QA, render/inspect when possible, revise, and deliver.
 
@@ -93,6 +98,11 @@ Never claim an unavailable check was completed.
 Prefer a user-provided template and preserve its native canvas dimensions. When
 no user template exists, use a neutral built-in preset and default to 16:9.
 
+When visual identity materially affects the outcome, do not silently choose
+between several plausible template directions. Ask whether the user wants to
+provide a template, choose an available built-in direction, or accept the
+agent's recommendation.
+
 Do not use `assets/templates/scholar-ppt-cn-reference-template.pptx` as the
 automatic default. It is a legacy development asset pending replacement.
 
@@ -132,6 +142,11 @@ Treat image generation as a provider-neutral, optional design tool.
 Create a mockup family/variant blueprint only when reusable visual planning adds
 value, such as a long deck, repeated evidence types, or explicit sample-first
 work. Skip it for simple or local revisions when it would add no value.
+
+For a new deck with no approved template or visual system, ask whether the user
+wants 3–5 representative samples before full production. Recommend samples when
+visual uncertainty is high, but let the user skip them. Samples may be editable
+PPTX slides built from a template; they do not require image generation.
 
 When visual exploration is used, read:
 
@@ -192,6 +207,11 @@ Use `references/artifact_qa_rules.md`. Classify results as:
 Render previews and a montage when a renderer exists. Use visual inspection when
 the host supports it. Read `references/comparative_montage_qa.md` for rendered
 deck review.
+
+Run static QA across the whole deck. Use one montage pass to locate visual
+anomalies, then open and re-render only affected slides. Do not inspect every
+slide individually unless the montage cannot resolve a suspected issue or the
+user requests exhaustive review.
 
 Fix deterministic errors before delivery. Do not block delivery solely because
 an optional renderer, image generator, or visual model is unavailable.

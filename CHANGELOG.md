@@ -27,6 +27,11 @@ Host-agnostic structured workflow under local development.
 - Made JSON the machine source of truth and Markdown a generated view.
 - Reduced `SKILL.md` and moved detailed rules to directly linked references.
 - Stopped selecting the legacy reference template automatically.
+- Ask users about material preference and quality/time decisions such as
+  template direction and representative-sample approval instead of silently
+  guessing.
+- Changed rendered QA to montage-first anomaly triage and individual inspection
+  of affected slides only.
 
 ### Development note
 

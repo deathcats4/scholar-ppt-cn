@@ -46,3 +46,8 @@ python scripts/export_qa_note.py <qa-report.json> <qa-note.md>
 
 Treat static overlap and resolution findings as candidates for visual
 verification because intentional composition can produce false positives.
+
+Static QA covers the whole PPTX. Visual verification should be anomaly-driven:
+use the montage to triage, then inspect only the slides associated with reported
+or visible concerns. Do not turn every warning into an exhaustive full-deck
+manual review.

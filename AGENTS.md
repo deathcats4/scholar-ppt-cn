@@ -18,9 +18,11 @@ deterministic end-to-end PPTX generation engine.
    optional visual samples -> editable PPTX -> QA -> revision.
 2. Do not expose internal execution modes. Record enabled/skipped steps and
    their reasons in project JSON instead.
-3. Prefer flow over interrogation. Infer discoverable facts from files and the
-   environment. Ask only when missing information would materially change the
-   result and cannot be inferred safely.
+3. Prefer meaningful questions over either interrogation or silent guessing.
+   Infer discoverable facts from files and the environment. Ask when a
+   subjective preference or quality/time tradeoff materially changes the
+   result, including template direction and representative-sample approval.
+   Bundle related questions and keep internal workflow details hidden.
 4. Treat image generation, visual inspection, office rendering, and local PPTX
    writing as optional capabilities. Degrade gracefully when they are absent.
 5. When a useful dependency is missing, explain its purpose and ask whether to
@@ -100,9 +102,12 @@ deterministic end-to-end PPTX generation engine.
    state.
 3. Skip visual samples when they add little value or the user requests direct
    editable output.
-4. Use visual samples when the user requests them or when they materially reduce
-   visual uncertainty.
+4. When a new or long deck has no approved visual system, ask whether the user
+   wants 3–5 representative samples before full production. Recommend samples
+   when they materially reduce visual uncertainty, but allow the user to skip.
 5. A workflow without image generation must remain complete and useful.
+6. Representative samples may be editable template-based slides and must not
+   require image generation.
 
 ## Output layout
 
@@ -151,9 +156,12 @@ Static Python QA is required whenever a PPTX exists. Rendering and visual QA are
 conditional enhancements:
 
 1. Render previews and a montage when a renderer is available.
-2. Use visual inspection when the host supports it.
-3. Do not block delivery solely because a visual model is unavailable.
-4. Record every skipped check and the reason.
+2. Use one montage pass to locate anomalies; inspect individual slides only
+   when static QA, the montage, or the user identifies a concern.
+3. Re-render affected slides after a fix, then perform one final montage pass.
+4. Do not default to exhaustive per-slide inspection.
+5. Do not block delivery solely because a visual model is unavailable.
+6. Record every skipped check and the reason.
 
 ## Repository structure
 
