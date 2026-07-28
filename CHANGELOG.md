@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.3.1-codex-artifact-workflow
+
+Improved Codex compatibility for artifact generation, preview inspection, and QA.
+
+### Added
+- Runtime compatibility rules for Codex and ChatGPT-style environments.
+- Explicit reference loading map in `SKILL.md`.
+- Codex artifact QA contract.
+- Image-generation batching rules to avoid long, fragile multi-page mockup runs.
+
+### Changed
+- Image-model sample generation now defaults to 1-2 pilot pages followed by 2-3 page batches.
+
 ## 3.3.0-productized-planned-family
 
 Added a mandatory mockup family + variants blueprint stage between production planning and generation.

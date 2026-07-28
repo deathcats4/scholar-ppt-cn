@@ -2,8 +2,8 @@
 name: scholar-ppt-cn
 description: Use this skill when a user wants to create, restyle, or rebuild a Chinese academic PowerPoint from papers, theses, reports, figures, notes, reference templates, screenshots, or visual mockups. The workflow keeps the user interface simple while restoring useful planning. First create a production planning table that maps each slide to narrative section, source asset, source-asset geometry, core message, and detailed layout archetype. Then create a mockup family + variants blueprint that groups planned slides into reusable visual families and assigns concrete variants. Visual samples and editable PPTX are generated only after this family blueprint is established. Template DNA controls visual identity; layout archetypes and mockup family variants control page structure; approved mockups override fallback layouts.
 metadata:
-  version: 3.3.0-productized-planned-family
-  summary: Chinese academic PPT workflow with production planning plus a mockup-family-and-variants stage before generating visual samples or editable PPTX.
+  version: 3.3.1-codex-artifact-workflow
+  summary: Chinese academic PPT workflow with production planning, mockup-family variants, explicit reference loading, and Codex artifact QA.
 ---
 
 # Scholar PPT CN Skill
@@ -26,6 +26,14 @@ Do not ask the user to understand internal route names, archetype names, or QA g
 
 If the user does not provide a separate template and wants a ready visual reference, use `assets/templates/scholar-ppt-cn-reference-template.pptx` as the default academic PPT template. Treat it as a reference template for Template DNA extraction, layout rhythm, typography, color system, and reusable page structures.
 
+## Runtime compatibility
+
+This skill must work in both Codex and ChatGPT-style environments.
+
+When running in Codex or any environment with filesystem/tool access, treat the task as an artifact-production workflow: read the relevant source files, create output files on disk, render or inspect previews when possible, revise problems before delivery, and return file paths plus a short QA note.
+
+When running in a ChatGPT-style environment without filesystem, PPTX generation, rendering, or image inspection tools, do not pretend those checks were performed. Provide the planning table, blueprint, prompts, or implementation instructions that are possible in that environment, and clearly say which QA steps still need to be performed after export.
+
 ## Main workflow
 
 The default workflow is:
@@ -37,6 +45,19 @@ The default workflow is:
 5. **Generate visual samples or editable PPTX according to the user request.**
 6. **If samples are approved, lock the visual system and expand from approved mockups.**
 7. **Render preview, QA, and revise.**
+
+## Reference loading map
+
+Load reference files as needed instead of relying only on this main file.
+
+- For narrative selection, read `references/hidden_narrative_presets.md`.
+- For production planning, read `references/production_planning_table_rules.md`, `references/evidence_index_rules.md`, `references/source_asset_geometry_rules.md`, and `references/fallback_layout_archetype_library.md`.
+- For Template DNA extraction, read `references/template_dna_rules.md`.
+- For mockup family + variants, read `references/mockup_family_variant_blueprint_rules.md`.
+- For image-model sample pages, read `references/image_generation_efficiency_rules.md`, `references/mockup_exploration_rules.md`, `references/evidence_asset_rules.md`, and `references/visible_text_filter_rules.md`.
+- For editable PPTX construction, read `references/editable_reconstruction_rules.md`, `references/cjk_typography_rules.md`, `references/layout_repetition_control.md`, and `references/evidence_asset_rules.md`.
+- For expansion from approved mockups, read `references/locked_visual_system_rules.md` and `references/mockup_derived_archetype_rules.md`.
+- For final checking, read `references/comparative_montage_qa.md` and `references/codex_artifact_qa_rules.md`.
 
 ## Production planning table
 
@@ -265,6 +286,21 @@ It may adapt layout according to content. It may use left-image/right-text when 
 
 Image-model text is provisional and must be checked before final delivery.
 
+## Image generation efficiency
+
+Full-slide academic mockups are expensive to generate. When using image generation, follow `references/image_generation_efficiency_rules.md`.
+
+Default sample generation should be staged:
+
+1. generate 1-2 pilot mockups first to test the visual system;
+2. revise the prompt or blueprint if the pilot adds unwanted template labels, unreadable figure areas, or repeated skeletons;
+3. continue in small batches of 2-3 pages;
+4. stop between batches when user approval or a visual correction would save time.
+
+Do not attempt 5-8 complex full-slide mockups in one uninterrupted generation step unless the user explicitly requests a long wait. If the user asks for many pages, split them into batches and tell the user the batch plan.
+
+For visual-system approval, prefer fewer high-value representative pages over many redundant pages.
+
 ## Locked visual system
 
 Once the user approves mockups, enter locked visual system internally.
@@ -474,6 +510,21 @@ Check:
 - planning table coverage.
 
 If the deck no longer reads as one visual system, revise before delivery.
+
+## Codex artifact QA
+
+When file and rendering tools are available, follow `references/codex_artifact_qa_rules.md` before final delivery.
+
+Minimum artifact contract for editable PPTX tasks:
+
+1. create the editable `.pptx` as a real file;
+2. render or otherwise inspect slide previews;
+3. create or inspect a preview montage when feasible;
+4. check CJK font/bold compliance for editable Chinese text;
+5. check obvious overflow, repeated skeletons, unreadable evidence assets, and visible internal workflow text;
+6. revise before delivery when checks expose fixable problems.
+
+If a check cannot be run because the required renderer or dependency is unavailable, say so in the QA note and perform the strongest available substitute check.
 
 ## Delivery
 

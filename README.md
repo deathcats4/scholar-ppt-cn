@@ -37,6 +37,8 @@ Core idea:
 
 The planning table is not a rigid old-style outline. It maps each slide to a narrative section, source asset, source-asset geometry, core message, and detailed layout archetype.
 
+For Codex, the skill now treats editable PPTX work as an artifact workflow: generate files, inspect or render previews when possible, run QA, and report any unavailable checks honestly. ChatGPT-style environments can still use the same planning and blueprint workflow, with QA steps performed after export.
+
 ## Version
 
-v3.3 adds a formal mockup family + variants stage between the production planning table and any generation step. This preserves the stability of visual families while adding variants to reduce monotony.
+v3.3.1 adds Codex artifact QA rules, explicit reference loading, and image-generation batching for slide mockups. v3.3 added the formal mockup family + variants stage between planning and generation.
