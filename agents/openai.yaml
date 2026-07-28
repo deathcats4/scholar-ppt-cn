@@ -1,4 +1,4 @@
 interface:
   display_name: "Scholar PPT CN"
-  short_description: "Chinese academic PPT planning and decks"
-  default_prompt: "Use $scholar-ppt-cn to create a Chinese academic PPT from my paper, figures, and reference template."
+  short_description: "Host-agnostic Chinese academic presentation workflow"
+  default_prompt: "Use $scholar-ppt-cn to plan and build a Chinese academic presentation from my source materials."

@@ -1,542 +1,212 @@
 ---
 name: scholar-ppt-cn
-description: Use this skill when a user wants to create, restyle, or rebuild a Chinese academic PowerPoint from papers, theses, reports, figures, notes, reference templates, screenshots, or visual mockups. The workflow keeps the user interface simple while restoring useful planning. First create a production planning table that maps each slide to narrative section, source asset, source-asset geometry, core message, and detailed layout archetype. Then create a mockup family + variants blueprint that groups planned slides into reusable visual families and assigns concrete variants. Visual samples and editable PPTX are generated only after this family blueprint is established. Template DNA controls visual identity; layout archetypes and mockup family variants control page structure; approved mockups override fallback layouts.
-metadata:
-  version: 3.3.1-codex-artifact-workflow
-  summary: Chinese academic PPT workflow with production planning, mockup-family variants, explicit reference loading, and Codex artifact QA.
+description: Host-agnostic workflow for creating, rebuilding, restyling, planning, sampling, and revising Chinese academic presentations from papers, theses, reports, figures, notes, screenshots, existing decks, or reference templates. Use when an agent needs structured project state, presentation planning, template DNA, optional visual exploration, editable PPTX work, or deterministic PPTX QA.
 ---
 
-# Scholar PPT CN Skill
+# Scholar PPT CN
 
-## User-facing principle
+## Interaction
 
-Keep the user interface simple.
+Keep one simple user-facing workflow. Accept natural-language requests such as:
 
-The user may say:
+- "参考论文和模板做一份中文组会 PPT。"
+- "先做规划表，不要生成 PPT。"
+- "不要生图，直接生成可编辑 PPTX。"
+- "先做几页视觉样板。"
+- "修改第 4 页和第 7 页并重新检查。"
 
-- "参考模板和材料，先做规划表。"
-- "按规划表先做 5–8 页视觉样板，不要生成 PPT。"
-- "这几页样板确认，按这个风格扩展成完整可编辑 PPT。"
-- "不要生图，直接参考模板生成可编辑 PPT。"
-- "第 X 页图太小 / 字体不对 / 内容有误，修一下。"
+Infer facts from supplied files and the runtime. Ask only when missing information
+would materially change the result and cannot be inferred.
 
-Do not ask the user to understand internal route names, archetype names, or QA gates unless they ask.
+When a useful dependency is missing, state its purpose and ask whether to install
+it. If the user declines, continue with the strongest available fallback.
 
-## Bundled reference template
+Do not require the user to understand route names, layout IDs, capability flags,
+or JSON fields.
 
-If the user does not provide a separate template and wants a ready visual reference, use `assets/templates/scholar-ppt-cn-reference-template.pptx` as the default academic PPT template. Treat it as a reference template for Template DNA extraction, layout rhythm, typography, color system, and reusable page structures.
+## Core contract
 
-## Runtime compatibility
+Use one adaptive workflow:
 
-This skill must work in both Codex and ChatGPT-style environments.
+1. Read the request and register source files.
+2. Probe available capabilities when local tools exist.
+3. Create or update a versioned `project.json`.
+4. Select or extract Template DNA.
+5. Plan the narrative, slides, evidence, and layouts.
+6. Add a family blueprint or visual samples only when they are useful.
+7. Create the requested artifact with the available host tools.
+8. Run deterministic QA, render/inspect when possible, revise, and deliver.
 
-When running in Codex or any environment with filesystem/tool access, treat the task as an artifact-production workflow: read the relevant source files, create output files on disk, render or inspect previews when possible, revise problems before delivery, and return file paths plus a short QA note.
+Do not define Lite, Standard, or Full modes. Record each workflow step as
+completed, planned, skipped, or not applicable, with a short reason.
 
-When running in a ChatGPT-style environment without filesystem, PPTX generation, rendering, or image inspection tools, do not pretend those checks were performed. Provide the planning table, blueprint, prompts, or implementation instructions that are possible in that environment, and clearly say which QA steps still need to be performed after export.
+Follow `references/adaptive_workflow_rules.md` for step-selection decisions and
+`references/project_state_rules.md` for the project-state contract.
 
-## Main workflow
+## Project JSON
 
-The default workflow is:
+Create JSON for every task, including planning-only and partial-revision work.
+Treat JSON as the machine source of truth and Markdown as a generated view.
 
-1. **Infer report type and narrative preset.**
-2. **Extract Template DNA.**
-3. **Build a production planning table.**
-4. **Build a mockup family + variants blueprint.**
-5. **Generate visual samples or editable PPTX according to the user request.**
-6. **If samples are approved, lock the visual system and expand from approved mockups.**
-7. **Render preview, QA, and revise.**
+Use `schemas/project.schema.json`. Keep project state compact:
 
-## Reference loading map
+- store IDs, paths, short summaries, mappings, decisions, and QA results;
+- do not embed PDFs, images, Base64 data, or full source text;
+- preserve stable slide and asset IDs across revisions;
+- record enabled/skipped steps and reasons;
+- update only affected records during partial revisions.
 
-Load reference files as needed instead of relying only on this main file.
+When local Python is available, run:
 
-- For narrative selection, read `references/hidden_narrative_presets.md`.
-- For production planning, read `references/production_planning_table_rules.md`, `references/evidence_index_rules.md`, `references/source_asset_geometry_rules.md`, and `references/fallback_layout_archetype_library.md`.
-- For Template DNA extraction, read `references/template_dna_rules.md`.
-- For mockup family + variants, read `references/mockup_family_variant_blueprint_rules.md`.
-- For image-model sample pages, read `references/image_generation_efficiency_rules.md`, `references/mockup_exploration_rules.md`, `references/evidence_asset_rules.md`, and `references/visible_text_filter_rules.md`.
-- For editable PPTX construction, read `references/editable_reconstruction_rules.md`, `references/cjk_typography_rules.md`, `references/layout_repetition_control.md`, and `references/evidence_asset_rules.md`.
-- For expansion from approved mockups, read `references/locked_visual_system_rules.md` and `references/mockup_derived_archetype_rules.md`.
-- For final checking, read `references/comparative_montage_qa.md` and `references/codex_artifact_qa_rules.md`.
+```text
+python scripts/init_project.py --slug <slug> --title <title> --output <project.json>
+python scripts/validate_project.py <project.json>
+python scripts/export_planning.py <project.json> <planning.md>
+```
 
-## Production planning table
+Do not proceed past a project-state error that would make later artifacts
+inconsistent.
 
-The production planning table is now the central pre-generation artifact.
+## Capability adaptation
 
-It is not merely a content outline. It must connect:
+Do not bind the workflow to Codex, ChatGPT, a named image model, PowerPoint, or
+LibreOffice.
 
-- narrative order;
-- slide task;
-- source assets;
-- source-asset geometry;
-- core message;
-- internal layout archetype;
-- density;
-- asset-handling instructions;
-- risk/QA notes.
+Use `references/capability_rules.md`. When local Python is available, probe with:
 
-Required columns:
+```text
+python scripts/preflight.py --output <preflight.json>
+```
 
-1. slide number;
-2. slide title;
-3. narrative section;
-4. communication task;
-5. source asset(s);
-6. source-asset geometry;
-7. core message;
-8. selected layout archetype ID;
-9. density level: low / medium / high;
-10. asset handling: preserve / overview+detail / split / request higher resolution;
-11. notes and risk: fact check, readability, translation, missing asset, etc.
+Apply these fallbacks:
 
-The planning table may be shown to the user for confirmation. Keep it readable and concise. Do not overload it with implementation jargon.
+- no image generation: construct directly from Template DNA and editable objects;
+- no visual model: run static QA and inspect previews manually when possible;
+- no office renderer: run OOXML static QA and report skipped visual checks;
+- no PPTX writer: deliver validated JSON, planning, and implementation guidance;
+- text-only host: deliver project JSON plus readable planning and blueprint views.
 
-## Mockup family + variants blueprint
+Never claim an unavailable check was completed.
 
-After the production planning table and before generating images or PPTX, create a mockup family + variants blueprint.
+## Templates and canvas
 
-This stage is the visual-system bridge between planning and generation.
+Prefer a user-provided template and preserve its native canvas dimensions. When
+no user template exists, use a neutral built-in preset and default to 16:9.
 
-It is not a final PPT and not an image-generation step. It defines reusable visual families and variant options so the deck is stable but not monotonous.
+Do not use `assets/templates/scholar-ppt-cn-reference-template.pptx` as the
+automatic default. It is a legacy development asset pending replacement.
 
-The blueprint must include:
+Treat Template DNA as visual identity, not fixed geometry. Read
+`references/template_dna_rules.md` and `references/cjk_typography_rules.md`.
 
-1. **Template DNA reconfirmation**
-   - 16:9 canvas;
-   - page tone;
-   - primary/accent colors;
-   - background style;
-   - title system;
-   - header/footer/page-number behavior;
-   - caption/source-note style;
-   - card/border/ribbon/divider language;
-   - figure/text ratio and page density;
-   - typography policy.
+Use role-based typography:
 
-2. **Mockup family summary table**
-   - Family ID, such as MF-01;
-   - family name;
-   - applicable narrative sections;
-   - applicable communication tasks;
-   - applicable source-asset geometries;
-   - mapped slide numbers;
-   - visual keywords;
-   - main risks.
+- inherit template roles when practical;
+- keep title, heading, body, caption, source-note, and emphasis roles distinct;
+- use platform-aware CJK fallbacks;
+- do not force all Chinese text to Microsoft YaHei or bold.
 
-3. **Variants for each family**
-   - each family needs at least 3 variants;
-   - high-frequency families need 4-6 variants;
-   - each variant needs Variant ID, layout name, applicable source-asset geometry, structure, mapped slide numbers, suitable scenario, and forbidden misuse.
+## Narrative and planning
 
-4. **Slide-to-family/variant mapping**
-   - every planned slide must map to a family and recommended variant;
-   - include backup variant and reason for choice;
-   - include readability risks.
+Select a narrative preset from `references/hidden_narrative_presets.md`, unless
+the user supplies an explicit structure.
 
-5. **Representative sample selection**
-   - choose 5-8 slides that best test the system;
-   - cover cover/report map, large evidence figure, multi-panel evidence, chart interpretation, mechanism/discussion, and conclusion when applicable.
+Before planning, index evidence proportionally to the available material. Read:
 
-This stage intentionally preserves the successful stability of earlier mockup-family workflows, while adding variants to prevent monotony.
+- `references/evidence_index_rules.md`;
+- `references/source_asset_geometry_rules.md`;
+- `references/evidence_asset_rules.md`.
 
-Family is a visual system unit. Variant is a concrete layout option. Neither should be treated as a rigid stencil.
+Build slide records using `references/production_planning_table_rules.md`.
+Select layouts from `references/fallback_layout_archetype_library.md` when no
+approved visual system exists.
 
+Keep evidence figures readable and faithful. Preserve axes, legends, scale bars,
+panel labels, table headers, units, and essential notes. Request a better source
+only when the missing quality prevents a useful result.
 
-## Hidden narrative presets
+## Optional visual exploration
 
-Narrative presets control story order. They do not control page geometry.
+Treat image generation as a provider-neutral, optional design tool.
 
-### Literature report / journal club preset
+Create a mockup family/variant blueprint only when reusable visual planning adds
+value, such as a long deck, repeated evidence types, or explicit sample-first
+work. Skip it for simple or local revisions when it would add no value.
 
-Use when the user provides a paper/article or asks for 文献汇报, 文献精读, journal club, paper reading, or a paper-based group presentation.
+When visual exploration is used, read:
 
-Default narrative order:
+- `references/mockup_family_variant_blueprint_rules.md`;
+- `references/mockup_exploration_rules.md`;
+- `references/image_generation_efficiency_rules.md`.
 
-1. Cover
-2. Report map / overview
-3. Background / introduction
-4. Research gap / question
-5. Objectives / contribution
-6. Study area / materials / data / methods, as appropriate
-7. Results / evidence chain
-8. Discussion / mechanism / interpretation
-9. Conclusions
-10. Closing
+After the user approves samples, read:
 
-Typical default scale:
+- `references/locked_visual_system_rules.md`;
+- `references/mockup_derived_archetype_rules.md`.
 
-- 10–15 min: about 14–18 slides;
-- complex paper: around 18–24 slides;
-- user-specified count overrides defaults.
+Do not paste a full-slide mockup image as the final editable slide background.
 
-### Thesis / defense preset
+## Editable PPTX
 
-Use when the user provides a thesis/dissertation, thesis directory, abstract, defense draft, or asks for degree defense / 答辩.
+Use the host's available presentation tooling. Follow:
 
-Default narrative order:
+- `references/editable_reconstruction_rules.md`;
+- `references/layout_repetition_control.md`;
+- `references/visible_text_filter_rules.md`;
+- `references/evidence_asset_rules.md`.
 
-1. Cover
-2. Outline / agenda
-3. Background and significance
-4. Research status
-5. Research gap / scientific or practical question
-6. Objectives, contents, and contributions
-7. Technical route / data / methods / workload, as appropriate
-8. Main chapters or main results in source order
-9. Integrated discussion / mechanism / system view
-10. Conclusions and outlook
-11. Acknowledgements / closing
+Keep titles, body text, captions, source notes, page numbers, simple shapes,
+lines, arrows, and callouts editable. Insert source figures as image objects
+unless the user requests a redraw.
 
-### Research progress preset
+Write outputs under a project-specific directory:
 
-Use for project progress meetings, group meetings, or recurring research updates that are not single-paper reports.
+```text
+outputs/<project-slug>/
+  project.json
+  planning.md
+  deck.pptx
+  previews/
+  qa-report.json
+  qa-note.md
+```
 
-Default narrative order:
+Preserve user source files. Retain recoverable versions when revising generated
+artifacts.
 
-1. Cover
-2. Progress overview
-3. Research question / objective
-4. Completed work
-5. Key results
-6. Current problems
-7. Next steps
-8. Discussion / help needed
-9. Closing
+## QA
 
-### General topical presentation preset
+Run static QA whenever a PPTX exists:
 
-Use for general course, topic, or professional presentations.
+```text
+python scripts/qa_pptx.py <deck.pptx> --project <project.json> --report <qa-report.json> --update-project
+python scripts/export_qa_note.py <qa-report.json> <qa-note.md>
+```
 
-Default narrative order:
+Use `references/artifact_qa_rules.md`. Classify results as:
 
-1. Cover
-2. Context
-3. Problem
-4. Main content 1
-5. Main content 2
-6. Main content 3
-7. Summary
-8. Closing
+- error: deterministic defects that block delivery;
+- warning: deliverable limitations that must be reported;
+- info: inventory and environment facts.
 
-### User structure override
+Render previews and a montage when a renderer exists. Use visual inspection when
+the host supports it. Read `references/comparative_montage_qa.md` for rendered
+deck review.
 
-If the user provides an explicit outline, table of contents, or preferred order, follow the user-provided structure over hidden presets.
-
-## Template DNA
-
-The reference/template deck teaches visual identity, not exact page geometry.
-
-Extract:
-
-- header / branding behavior;
-- title hierarchy;
-- footer and page number;
-- palette;
-- caption/source-note style;
-- spacing rhythm;
-- page density;
-- source-material/text balance;
-- component language;
-- typography roles;
-- border, divider, ribbon, card, and emphasis styles.
-
-Default adherence: guided-creative.
-
-Use strict adherence only if the user explicitly says the template is official or must be followed closely.
-
-## Internal route selection
-
-The route is chosen internally.
-
-### Route A: plan -> image-model samples
-
-Use when the user asks for visual samples, mockups, style directions, or wants to see the effect first.
-
-Chain:
-
-Production planning table -> mockup family + variants blueprint -> Template DNA -> image-model full-slide mockup variants -> user approval -> locked visual system -> mockup-derived archetypes -> editable reconstruction.
-
-### Route B: plan -> template-direct editable PPTX
-
-Use when the user asks to skip image generation, use a strict template, produce quickly, or directly generate editable PPTX.
-
-Chain:
-
-Production planning table -> mockup family + variants blueprint -> Template DNA -> detailed layout archetype library -> Template-DNA parameterization -> editable PPTX -> QA.
-
-Template DNA alone is not enough for Route B. The detailed layout archetype library must be used.
-
-## Image model role
-
-The image model is the visual designer for full-slide mockups.
-
-It should follow the production planning table and mockup family + variants blueprint, but may make composition decisions inside the selected family/variant boundaries.
-
-It may decide:
-
-- source-material scale and dominance;
-- composition direction;
-- interpretation-zone placement;
-- caption/source-note placement;
-- visual rhythm;
-- variation across mockups;
-- when to use left-image/right-text, top-image/bottom-text, central model, evidence wall, comparison, or open-space layouts.
-
-It may adapt layout according to content. It may use left-image/right-text when that is genuinely the best solution. It must not use the same skeleton lazily for the whole deck.
-
-Image-model text is provisional and must be checked before final delivery.
-
-## Image generation efficiency
-
-Full-slide academic mockups are expensive to generate. When using image generation, follow `references/image_generation_efficiency_rules.md`.
-
-Default sample generation should be staged:
-
-1. generate 1-2 pilot mockups first to test the visual system;
-2. revise the prompt or blueprint if the pilot adds unwanted template labels, unreadable figure areas, or repeated skeletons;
-3. continue in small batches of 2-3 pages;
-4. stop between batches when user approval or a visual correction would save time.
-
-Do not attempt 5-8 complex full-slide mockups in one uninterrupted generation step unless the user explicitly requests a long wait. If the user asks for many pages, split them into batches and tell the user the batch plan.
-
-For visual-system approval, prefer fewer high-value representative pages over many redundant pages.
-
-## Locked visual system
-
-Once the user approves mockups, enter locked visual system internally.
-
-Approved mockups become the valid visual source for reconstruction and expansion.
-
-Expansion must preserve:
-
-- header behavior;
-- title hierarchy;
-- typography rules;
-- color palette;
-- border and line style;
-- emphasis style;
-- source-material treatment;
-- caption/source-note style;
-- footer and page number;
-- approximate density and whitespace rhythm.
-
-Locked visual system is not a fixed stencil. New slides may adapt composition inside the approved system.
-
-## Mockup-derived archetype library
-
-When approved mockups exist, they override the built-in fallback layout library.
-
-After approval, internally derive archetypes from approved mockups.
-
-Each archetype should record:
-
-- source approved mockup ID;
-- communication purpose;
-- fixed visual elements;
-- adaptable elements;
-- source-material region behavior;
-- interpretation-region behavior;
-- caption/source-note behavior;
-- footer/page-number behavior;
-- density range;
-- suitable content types;
-- forbidden misuse.
-
-## Detailed layout archetype library
-
-The internal detailed archetype library is used for:
-
-- production planning table archetype selection;
-- mockup family + variants construction;
-- template-direct editable PPTX;
-- fallback pages when no approved mockup exists.
-
-It is not a user-facing list by default.
-
-Select archetypes by matching:
-
-- narrative section;
-- slide task;
-- source asset type;
-- source-asset geometry;
-- information density;
-- neighboring slide rhythm;
-- template constraints.
-
-## Source-asset geometry matching
-
-Before choosing an archetype, classify each primary source asset:
-
-- wide figure;
-- tall figure;
-- square / near-square figure;
-- dense multi-panel figure;
-- photo / microscopy / image evidence;
-- chart / graph;
-- table;
-- process / mechanism diagram;
-- map / spatial figure;
-- screenshot / UI / document excerpt;
-- no primary source asset.
-
-Do not force all evidence into a single left-image/right-text structure.
-
-## Evidence index
-
-Internally classify source materials before production planning.
-
-Useful fields:
-
-- asset ID / figure number / table number;
-- source section;
-- content summary;
-- clarity;
-- relevance to the narrative;
-- main evidence / optional support / likely unused;
-- whether a higher-resolution version is needed.
-
-Main evidence assets should be clear and large enough for presentation. If a key source asset is unreadable, request a better version rather than hiding the issue.
-
-## Visible text filter
-
-Do not place internal workflow language into the final PPT.
-
-Avoid visible slide text such as:
-
-- template DNA;
-- minimal brief;
-- archetype;
-- inheritance map;
-- mockup-derived;
-- production planning table;
-- production note;
-- speaker note;
-- this slide is for;
-- design suggestion;
-- QA note;
-- page task;
-- source gap;
-- internal route;
-- internal file or workflow label.
-
-If an internal idea must appear, rewrite it as normal presentation content.
-
-## Editable reconstruction
-
-The final PPTX should be editable.
-
-Use editable objects for:
-
-- titles;
-- body text;
-- captions;
-- source notes;
-- page numbers;
-- footer/header elements;
-- lines;
-- boxes;
-- arrows;
-- callouts;
-- simple diagrams.
-
-Insert source figures, tables, screenshots, and other evidence assets as image objects unless the user explicitly requests redrawing.
-
-Do not paste a full-slide mockup image as the final PPT slide background.
-
-## CJK typography hard rule
-
-For decks containing editable Chinese text:
-
-- every editable run containing CJK characters must use Microsoft YaHei / 微软雅黑;
-- every editable run containing CJK characters must be set to 加粗 / bold;
-- English, numbers, units, and formulas default to Arial when separated into their own runs;
-- text inside source images is not modified.
-
-Correct implementation means:
-
-- font family = Microsoft YaHei / 微软雅黑;
-- bold = true / 加粗开启.
-
-Do not treat "Microsoft YaHei Bold" as a separate font name.
-
-This rule outranks template-extracted regular body text.
-
-## Evidence asset rules
-
-Source materials are evidence assets.
-
-Default:
-
-- preserve as image objects when fidelity matters;
-- no AI redraw unless requested;
-- no content modification;
-- no cropping of essential labels, axes, legends, scale bars, panel labels, table headers, or explanatory notes;
-- use high-resolution originals when available;
-- if a key source asset is unreadable, request a better file instead of hiding the problem;
-- use overview + detail zoom when a dense figure must be explained on a presentation slide.
-
-## Layout repetition control
-
-For direct editable generation and long-deck expansion:
-
-- do not use the same visible skeleton for more than two consecutive content slides unless the source material requires it;
-- if one slide task appears many times, rotate among compatible archetypes;
-- preserve visual identity through Template DNA, not by repeating one geometry;
-- allow left-image/right-text when appropriate, but treat repeated lazy use as a QA failure.
-
-## Comparative montage QA
-
-For expanded decks, QA must compare:
-
-- approved mockup overview when samples exist;
-- expanded PPT preview overview.
-
-For direct editable generation, inspect the full preview montage.
-
-Check:
-
-- title hierarchy consistency;
-- header/footer/page-number consistency;
-- source-material placement logic;
-- caption/source-note consistency;
-- color and border consistency;
-- density similarity;
-- typography compliance;
-- repeated skeletons;
-- sudden new visual language;
-- text overflow or clipping;
-- source asset readability;
-- narrative preset coverage;
-- planning table coverage.
-
-If the deck no longer reads as one visual system, revise before delivery.
-
-## Codex artifact QA
-
-When file and rendering tools are available, follow `references/codex_artifact_qa_rules.md` before final delivery.
-
-Minimum artifact contract for editable PPTX tasks:
-
-1. create the editable `.pptx` as a real file;
-2. render or otherwise inspect slide previews;
-3. create or inspect a preview montage when feasible;
-4. check CJK font/bold compliance for editable Chinese text;
-5. check obvious overflow, repeated skeletons, unreadable evidence assets, and visible internal workflow text;
-6. revise before delivery when checks expose fixable problems.
-
-If a check cannot be run because the required renderer or dependency is unavailable, say so in the QA note and perform the strongest available substitute check.
+Fix deterministic errors before delivery. Do not block delivery solely because
+an optional renderer, image generator, or visual model is unavailable.
 
 ## Delivery
 
-For planning stage, deliver the production planning table. Then deliver the mockup family + variants blueprint before generating images or PPTX.
+Deliver only the artifacts requested by the user plus the project JSON and the
+relevant QA result.
 
-For sample stage, deliver full-slide mockup images and stop.
+- Planning request: `project.json` and generated planning Markdown.
+- Sample request: project state and sample images; do not generate PPTX unless
+  requested.
+- PPTX request: editable PPTX, project JSON, QA report/note, and previews when
+  available.
+- Revision request: updated artifacts, affected slide summary, and rerun checks.
 
-For direct editable PPTX or expanded editable PPTX, deliver:
-
-- editable `.pptx`;
-- preview montage;
-- brief QA note;
-- mention any fallback pages, missing high-resolution assets, or content that needs source verification.
-
+Use `references/usage_prompts.md` only for invocation examples.
 Keep the final response short and practical.

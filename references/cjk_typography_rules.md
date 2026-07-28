@@ -1,14 +1,19 @@
 # CJK Typography Rules
 
-For decks containing editable Chinese text:
+Use role-based typography.
 
-- every editable run containing CJK characters must use Microsoft YaHei / 微软雅黑;
-- every editable run containing CJK characters must be set to 加粗 / bold;
-- English, numbers, units, and formulas default to Arial when separated into their own runs;
-- text inside source images is not modified.
+1. Prefer font roles extracted from the user template.
+2. Keep title, heading, body, caption, source-note, and emphasis roles distinct.
+3. Use bold only where the role or content requires emphasis.
+4. Use a platform-aware fallback stack, for example:
+   - Microsoft YaHei;
+   - PingFang SC;
+   - Source Han Sans SC;
+   - Noto Sans CJK SC.
+5. Check locally available fonts before construction when possible.
+6. Keep mixed-language runs together when splitting them would damage baseline,
+   spacing, or editability.
+7. Do not modify text baked into source images.
 
-Correct implementation:
-- font family = Microsoft YaHei / 微软雅黑;
-- bold = true / 加粗开启.
-
-Do not treat "Microsoft YaHei Bold" as a separate font name.
+QA for missing fonts, substitution, unreadable sizes, and lost hierarchy. Do not
+require every CJK run to use one font or `bold=true`.

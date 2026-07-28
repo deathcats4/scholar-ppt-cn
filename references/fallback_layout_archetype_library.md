@@ -4,6 +4,14 @@ This library is used for production planning, template-direct editable generatio
 
 It is internal. Do not ask the user to manually choose archetypes.
 
+## Contents
+
+- Opening, agenda, background, gap, and objective
+- Study area/data and methods
+- Single-figure, multi-panel, chart, and table evidence
+- Comparison, mechanism, discussion, and conclusions
+- Closing pages and selection rules
+
 ## Opening / cover
 
 O1. Strong title block + small source/context line + restrained visual motif.

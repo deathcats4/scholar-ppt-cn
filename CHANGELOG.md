@@ -1,53 +1,50 @@
 # Changelog
 
-## 3.3.1-codex-artifact-workflow
+## 3.4.0-dev
 
-Improved Codex compatibility for artifact generation, preview inspection, and QA.
+Host-agnostic structured workflow under local development.
 
 ### Added
-- Runtime compatibility rules for Codex and ChatGPT-style environments.
-- Explicit reference loading map in `SKILL.md`.
-- Codex artifact QA contract.
-- Image-generation batching rules to avoid long, fragile multi-page mockup runs.
+
+- Repository-level `AGENTS.md` with product and development decisions.
+- Versioned unified project JSON Schema.
+- Zero-dependency project scaffolding, JSON validation, and Markdown planning
+  export.
+- Capability/dependency preflight probe.
+- Deterministic PPTX ZIP/OOXML static QA and generated readable QA notes.
+- Deterministic Skill packaging with manifest and SHA-256.
+- Unit fixtures and cross-platform GitHub Actions validation.
 
 ### Changed
-- Image-model sample generation now defaults to 1-2 pilot pages followed by 2-3 page batches.
+
+- Replaced named-host routing with one adaptive workflow.
+- Made image generation and visual samples optional and provider-neutral.
+- Made mockup family/variant planning conditional.
+- Preserved user-template canvas dimensions; default to 16:9 only without a
+  source canvas.
+- Replaced mandatory Microsoft YaHei bold CJK text with role-based typography
+  and platform-aware fallbacks.
+- Made JSON the machine source of truth and Markdown a generated view.
+- Reduced `SKILL.md` and moved detailed rules to directly linked references.
+- Stopped selecting the legacy reference template automatically.
+
+### Development note
+
+- The legacy reference template remains tracked during local testing and has not
+  been removed or replaced.
+- No commit, push, release, or remote issue action is part of this local phase.
+
+## 3.3.1-codex-artifact-workflow
+
+Improved artifact generation, preview inspection, QA guidance, explicit
+reference loading, and image-generation batching.
 
 ## 3.3.0-productized-planned-family
 
-Added a mandatory mockup family + variants blueprint stage between production planning and generation.
-
-### Added
-- Template DNA reconfirmation before mockup family construction.
-- Mockup family summary table.
-- Multiple variants per family.
-- Slide-to-family/variant mapping for every planned slide.
-- Representative sample selection.
-- Dedicated reference: `mockup_family_variant_blueprint_rules.md`.
-
-### Changed
-- Image-model samples now follow both the production planning table and the mockup family + variants blueprint.
-- Template-direct editable PPTX also uses the family/variant blueprint for visual consistency.
-- High-frequency families must define 4-6 variants to reduce repetitive pages.
-
-# Changelog
+Added a mandatory mockup family + variants blueprint stage between production
+planning and generation.
 
 ## 3.2.0-productized-planned-archetype
 
-Restored planning, but redefined it as a production planning table.
-
-### Added
-- Production planning table as central pre-generation artifact.
-- Planning table fields: narrative section, communication task, source asset, source-asset geometry, core message, layout archetype ID, density, asset handling, risks.
-- Hidden narrative presets now include:
-  - literature report / journal club;
-  - thesis / defense;
-  - research progress;
-  - general topical presentation.
-- Detailed fallback layout archetype library remains required for template-direct generation.
-- Image-model samples now follow the planning table while retaining composition freedom inside selected archetypes.
-
-### Clarified
-- Planning table is not an old-style rigid slide outline.
-- Narrative presets control story order; layout archetypes control structure; Template DNA controls visual identity.
-- User-provided outline overrides hidden presets.
+Restored planning as a production planning table with narrative, source asset,
+geometry, message, layout, density, handling, and risk fields.
