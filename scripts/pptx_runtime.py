@@ -48,6 +48,14 @@ _INTERNAL_RENDER_TYPES = {
     "process",
     "conclusion",
 }
+RENDER_CONTENT_LIMITS = {
+    "cover": {"items": 4},
+    "statement": {"items": 4},
+    "bullets": {"items": 4},
+    "figure": {"items": 4, "body": 4},
+    "process": {"items": 5, "body": 5},
+    "conclusion": {"items": 4, "body": 4},
+}
 
 
 @dataclass(frozen=True)

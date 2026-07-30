@@ -79,6 +79,13 @@ one. For comparison and multi-panel pages, `items[].asset_id` binds its label
 and explanation to that asset instead of relying on array position. A short
 `body` array remains a valid fallback when no item metadata is supplied.
 
+The fixed layouts also have explicit content capacities so valid input is
+never silently truncated: cover metadata, bullet/statement items, figure
+annotations, and conclusion entries permit at most four items; process pages
+permit at most five steps. The validator applies these rules after resolving
+`auto` to its effective render type and reports `slide.render_content_count`
+or `slide.render_asset_count` before a build can begin.
+
 The build report records which declared evidence assets were actually placed.
 If a page intentionally leaves declared evidence out, list those IDs in
 `ignored_asset_ids` and give a concise `ignore_reason`; otherwise the runtime

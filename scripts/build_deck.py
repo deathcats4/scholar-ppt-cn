@@ -52,10 +52,16 @@ def _declared_input_paths(
     base_dir: Path,
 ) -> set[Path]:
     candidates: list[str] = []
-    source_files = project.get("project", {}).get("source_files", [])
+    project_state = project.get("project")
+    source_files = (
+        project_state.get("source_files", [])
+        if isinstance(project_state, dict)
+        else []
+    )
     if isinstance(source_files, list):
         candidates.extend(item for item in source_files if isinstance(item, str))
-    template_path = project.get("template", {}).get("path")
+    template = project.get("template")
+    template_path = template.get("path") if isinstance(template, dict) else None
     if isinstance(template_path, str):
         candidates.append(template_path)
     assets = project.get("assets", [])
@@ -68,6 +74,87 @@ def _declared_input_paths(
         path = Path(candidate)
         resolved.add((path if path.is_absolute() else base_dir / path).resolve())
     return resolved
+
+
+def _path_issues(
+    *,
+    project_path: Path,
+    target: Path | None,
+    report_target: Path | None,
+    protected_inputs: set[Path],
+) -> list[Issue]:
+    issues: list[Issue] = []
+    project_target = project_path.resolve()
+    if target is not None:
+        if target.suffix.lower() != ".pptx":
+            issues.append(
+                Issue(
+                    "error",
+                    "output.extension",
+                    "PPTX output path must end with .pptx",
+                    str(target),
+                )
+            )
+        if target == project_target:
+            issues.append(
+                Issue(
+                    "error",
+                    "output.conflict",
+                    "PPTX output cannot overwrite project.json",
+                    str(target),
+                )
+            )
+        if target in protected_inputs:
+            issues.append(
+                Issue(
+                    "error",
+                    "output.input_conflict",
+                    "PPTX output cannot overwrite a declared source, template, or asset",
+                    str(target),
+                )
+            )
+    if report_target is not None:
+        if report_target.suffix.lower() != ".json":
+            issues.append(
+                Issue(
+                    "error",
+                    "report.extension",
+                    "Build report path must end with .json",
+                    str(report_target),
+                )
+            )
+        if report_target in protected_inputs:
+            issues.append(
+                Issue(
+                    "error",
+                    "report.input_conflict",
+                    "Build report cannot overwrite project.json or a declared "
+                    "source, template, or asset",
+                    str(report_target),
+                )
+            )
+        if target is not None and report_target == target:
+            issues.append(
+                Issue(
+                    "error",
+                    "output.path_conflict",
+                    "PPTX output and build report must use different paths",
+                    str(report_target),
+                )
+            )
+    return issues
+
+
+def _report_writable(report_target: Path | None, issues: list[Issue]) -> bool:
+    return report_target is not None and not any(
+        issue.code
+        in {
+            "report.extension",
+            "report.input_conflict",
+            "output.path_conflict",
+        }
+        for issue in issues
+    )
 
 
 def _backup_existing(output: Path) -> Path | None:
@@ -136,90 +223,64 @@ def build_from_project(
     preserve_existing: bool = True,
     debug: bool = False,
 ) -> dict[str, Any]:
-    issues: list[Issue] = []
+    project_path = project_path.resolve()
+    explicit_target = _resolve_output(output, base_dir)
+    report_target = _resolve_output(report_path, base_dir)
+    protected_inputs = {project_path}
+    preflight_issues = _path_issues(
+        project_path=project_path,
+        target=explicit_target,
+        report_target=report_target,
+        protected_inputs=protected_inputs,
+    )
     try:
         project = load_json(project_path)
     except (OSError, ValueError) as exc:
+        issues = list(preflight_issues)
+        issues.append(Issue("error", "input.read", str(exc), str(project_path)))
         return make_report(
             "build_deck",
-            [Issue("error", "input.read", str(exc), str(project_path))],
+            issues,
             project=str(project_path),
+            output=str(explicit_target) if explicit_target else None,
+            report_output=str(report_target) if report_target else None,
+            report_writable=_report_writable(report_target, issues),
+            rendered_slides=[],
         )
 
-    target = _output_path(project, base_dir, output).resolve()
-    report_target = _resolve_output(report_path, base_dir)
-    protected_inputs = _declared_input_paths(project, base_dir) | {
-        project_path.resolve()
-    }
-    if target.suffix.lower() != ".pptx":
-        issues.append(
-            Issue(
-                "error",
-                "output.extension",
-                "PPTX output path must end with .pptx",
-                str(target),
-            )
-        )
-    if target == project_path.resolve():
-        issues.append(
-            Issue(
-                "error",
-                "output.conflict",
-                "PPTX output cannot overwrite project.json",
-                str(target),
-            )
-        )
-    if target in protected_inputs:
-        issues.append(
-            Issue(
-                "error",
-                "output.input_conflict",
-                "PPTX output cannot overwrite a declared source, template, or asset",
-                str(target),
-            )
-        )
-    if report_target is not None:
-        if report_target.suffix.lower() != ".json":
-            issues.append(
-                Issue(
-                    "error",
-                    "report.extension",
-                    "Build report path must end with .json",
-                    str(report_target),
-                )
-            )
-        if report_target in protected_inputs:
-            issues.append(
-                Issue(
-                    "error",
-                    "report.input_conflict",
-                    "Build report cannot overwrite project.json or a declared "
-                    "source, template, or asset",
-                    str(report_target),
-                )
-            )
-        if report_target == target:
-            issues.append(
-                Issue(
-                    "error",
-                    "output.path_conflict",
-                    "PPTX output and build report must use different paths",
-                    str(report_target),
-                )
-            )
-
-    report_writable = report_target is not None and not any(
-        issue.code
-        in {
-            "report.extension",
-            "report.input_conflict",
-            "output.path_conflict",
-        }
-        for issue in issues
-    )
     validation_issues = validate_project(project)
-    issues.extend(validation_issues)
+    issues = list(validation_issues)
+    protected_inputs |= _declared_input_paths(project, base_dir)
+    issues.extend(
+        _path_issues(
+            project_path=project_path,
+            target=explicit_target,
+            report_target=report_target,
+            protected_inputs=protected_inputs,
+        )
+    )
+    report_writable = _report_writable(report_target, issues)
     if any(issue.severity == "error" for issue in issues):
+        return make_report(
+            "build_deck",
+            issues,
+            project=str(project_path),
+            output=str(explicit_target) if explicit_target else None,
+            report_output=str(report_target) if report_target else None,
+            report_writable=report_writable,
+            rendered_slides=[],
+        )
+
+    target = _output_path(project, base_dir, explicit_target).resolve()
+    output_path_issues = _path_issues(
+        project_path=project_path,
+        target=target,
+        report_target=report_target,
+        protected_inputs=protected_inputs,
+    )
+    issues.extend(output_path_issues)
+    report_writable = _report_writable(report_target, issues)
+    if any(issue.severity == "error" for issue in output_path_issues):
         return make_report(
             "build_deck",
             issues,

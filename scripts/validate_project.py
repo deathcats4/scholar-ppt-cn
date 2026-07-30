@@ -10,6 +10,7 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts.common import Issue, load_json, make_report, print_report, write_json
+from scripts.pptx_runtime import RENDER_CONTENT_LIMITS, infer_render_type
 from scripts.schema_validation import validate_against_schema
 
 
@@ -323,7 +324,7 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
                 )
             )
         elif isinstance(render, dict):
-            render_type = render.get("type")
+            effective_render_type = infer_render_type(slide)
             render_asset_ids = render.get("asset_ids", [])
             effective_asset_ids = (
                 render_asset_ids
@@ -382,7 +383,7 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
                                 f"slides[{index}].render.items[{item_index}].asset_id",
                             )
                         )
-            if render_type in {"comparison", "multi-panel"}:
+            if effective_render_type in {"comparison", "multi-panel"}:
                 effective_set = {
                     item for item in effective_asset_ids if isinstance(item, str)
                 }
@@ -406,7 +407,7 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
                         for item in effective_asset_ids
                         if isinstance(item, str)
                     }
-                    if render_type
+                    if effective_render_type
                     in {"cover", "figure", "comparison", "multi-panel"}
                     else set()
                 )
@@ -446,6 +447,38 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
                         )
                     )
 
+            limits = RENDER_CONTENT_LIMITS.get(effective_render_type, {})
+            content_field: str | None = None
+            content_count = 0
+            if isinstance(items, list) and items:
+                content_field = "items"
+                content_count = len(items)
+            else:
+                body = render.get("body", [])
+                if isinstance(body, list) and body:
+                    content_field = "body"
+                    content_count = len(body)
+            if content_field in limits and content_count > limits[content_field]:
+                maximum = limits[content_field]
+                issues.append(
+                    Issue(
+                        "error",
+                        "slide.render_content_count",
+                        f"{effective_render_type} render supports at most {maximum} "
+                        f"{content_field} entries; found {content_count}",
+                        f"slides[{index}].render.{content_field}",
+                    )
+                )
+
+        if render is None or isinstance(render, dict):
+            render_data = render if isinstance(render, dict) else {}
+            effective_render_type = infer_render_type(slide)
+            render_asset_ids = render_data.get("asset_ids", [])
+            effective_asset_ids = (
+                render_asset_ids
+                if "asset_ids" in render_data and isinstance(render_asset_ids, list)
+                else refs if isinstance(refs, list) else []
+            )
             effective_count = len(
                 [item for item in effective_asset_ids if isinstance(item, str)]
             )
@@ -455,14 +488,14 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
                 "comparison": (2, 2, "exactly two"),
                 "multi-panel": (2, 4, "between two and four"),
             }
-            if render_type in count_rules:
-                minimum, maximum, label = count_rules[render_type]
+            if effective_render_type in count_rules:
+                minimum, maximum, label = count_rules[effective_render_type]
                 if not minimum <= effective_count <= maximum:
                     issues.append(
                         Issue(
                             "error",
                             "slide.render_asset_count",
-                            f"{render_type} render requires {label} effective "
+                            f"{effective_render_type} render requires {label} effective "
                             f"asset_ids; found {effective_count}",
                             f"slides[{index}].render.asset_ids",
                         )

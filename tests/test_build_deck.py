@@ -201,6 +201,77 @@ def _project(base: Path) -> dict:
 
 
 class BuildDeckDependencyTests(unittest.TestCase):
+    def test_cli_malformed_nested_objects_returns_and_writes_report(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            project_path = base / "project.json"
+            report_path = base / "build-report.json"
+            project = new_project(
+                "malformed-project",
+                "畸形项目测试",
+                "outputs/malformed-project",
+            )
+            project["artifacts"] = []
+            project["project"] = []
+            project["template"] = []
+            write_json(project_path, project)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/build_deck.py",
+                    str(project_path),
+                    "--base-dir",
+                    str(base),
+                    "--report",
+                    str(report_path),
+                ],
+                cwd=Path(__file__).resolve().parent.parent,
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+            self.assertEqual(1, result.returncode, result.stdout)
+            self.assertNotIn("Traceback", result.stderr)
+            self.assertTrue(report_path.is_file())
+            report = load_json(report_path)
+        self.assertEqual("failed", report["status"])
+        self.assertTrue(
+            {"schema.type", "type.object"}
+            & {issue["code"] for issue in report["issues"]}
+        )
+
+    def test_cli_unreadable_json_still_writes_requested_report(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            project_path = base / "project.json"
+            report_path = base / "build-report.json"
+            project_path.write_text("{not-valid-json", encoding="utf-8")
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/build_deck.py",
+                    str(project_path),
+                    "--base-dir",
+                    str(base),
+                    "--report",
+                    str(report_path),
+                ],
+                cwd=Path(__file__).resolve().parent.parent,
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+            self.assertEqual(1, result.returncode, result.stdout)
+            self.assertNotIn("Traceback", result.stderr)
+            self.assertTrue(report_path.is_file())
+            report = load_json(report_path)
+        self.assertIn(
+            "input.read",
+            {issue["code"] for issue in report["issues"]},
+        )
+
     def test_missing_runtime_dependencies_return_structured_error(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)
