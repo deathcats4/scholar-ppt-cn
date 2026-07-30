@@ -11,6 +11,9 @@ Host-agnostic structured workflow beta candidate.
 - Zero-dependency project scaffolding, JSON validation, and Markdown planning
   export.
 - Capability/dependency preflight probe.
+- Lightweight Python fallback runtime for baseline editable PPTX generation,
+  with optional semantic slide render intent, atomic writes, and recoverable
+  previous artifacts.
 - Deterministic PPTX ZIP/OOXML static QA and generated readable QA notes.
 - Deterministic Skill packaging with manifest and SHA-256.
 - Unit fixtures and cross-platform GitHub Actions validation.

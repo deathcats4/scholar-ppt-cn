@@ -416,6 +416,83 @@
         }
       }
     },
+    "renderItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "body",
+        "asset_id"
+      ],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
+        "asset_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "slideRender": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "auto",
+            "cover",
+            "section",
+            "statement",
+            "bullets",
+            "figure",
+            "comparison",
+            "multi-panel",
+            "process",
+            "conclusion"
+          ]
+        },
+        "subtitle": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "body": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/renderItem"
+          }
+        },
+        "asset_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          },
+          "uniqueItems": true
+        },
+        "footer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
     "slide": {
       "type": "object",
       "additionalProperties": false,
@@ -513,6 +590,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "render": {
+          "$ref": "#/$defs/slideRender"
         }
       }
     },

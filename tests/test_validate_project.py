@@ -162,6 +162,43 @@ class ProjectValidationTests(unittest.TestCase):
         }
         self.assertIn("reference.slide_reverse", asset_codes)
 
+    def test_render_assets_must_belong_to_the_slide_evidence_set(self) -> None:
+        data = load_json(FIXTURES / "project-valid.json")
+        data["assets"].append(
+            {
+                "id": "asset-extra",
+                "type": "figure",
+                "path": "sources/extra.png",
+                "source_ref": {},
+                "geometry": "wide",
+                "summary": "Extra figure",
+                "used_on_slides": [],
+            }
+        )
+        data["slides"][1]["render"] = {
+            "type": "figure",
+            "asset_ids": ["asset-extra"],
+        }
+        codes = {
+            issue.code
+            for issue in validate_project(data)
+            if issue.severity == "error"
+        }
+        self.assertIn("reference.render_asset", codes)
+
+    def test_comparison_render_requires_two_explicit_assets(self) -> None:
+        data = load_json(FIXTURES / "project-valid.json")
+        data["slides"][1]["render"] = {
+            "type": "comparison",
+            "asset_ids": ["asset-fig-1"],
+        }
+        codes = {
+            issue.code
+            for issue in validate_project(data)
+            if issue.severity == "error"
+        }
+        self.assertIn("slide.render_asset_count", codes)
+
     def test_slide_numbers_must_be_contiguous(self) -> None:
         data = load_json(FIXTURES / "project-valid.json")
         data["slides"][1]["number"] = 3

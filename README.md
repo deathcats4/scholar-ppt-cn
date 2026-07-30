@@ -24,12 +24,16 @@
 - 统一、版本化的 `project.json`；
 - 生产规划 Markdown 导出；
 - 环境能力探测；
+- 可选的轻量 Python 可编辑 PPTX 回退运行时；
 - PPTX ZIP/OOXML 静态 QA；
 - 可复现 Skill 打包；
 - 自动测试和跨平台 CI。
 
-本仓库暂不提供内置的确定性 PPTX 生成引擎。PPTX 写入、Office 渲染、视觉
-检查和图像生成由当前 Agent 宿主的可用工具提供，并可按能力降级。
+本仓库不承诺完整的高保真 PPTX 生成引擎。v3.4 Beta 提供一个轻量、确定性的
+Python 回退运行时：当当前模型与执行环境需要更确定的输出路径时，它可以根据
+`project.json` 生成基础可编辑 PPTX，避免在任务中临时编写大型构建脚本。
+严格复用用户母版、复杂图表、动画和高设计完成度页面仍优先交给宿主工具。
+Office 渲染、视觉检查和图像生成继续按能力启用和降级。
 
 ## 工作方式
 
@@ -66,7 +70,8 @@ QA 默认对整个 PPTX 做静态检查，再用一次蒙太奇定位异常；�
 
 ## 本地工具
 
-要求 Python 3.11+，核心命令不依赖第三方包：
+要求 Python 3.11+。项目初始化、Schema 校验、静态 QA、视觉包校验和打包等
+核心命令不依赖第三方包：
 
 ```text
 python scripts/preflight.py --output outputs/preflight.json
@@ -83,6 +88,18 @@ python scripts/lint_skill.py .
 python scripts/package_skill.py --version dev
 python -m unittest discover -s tests -v
 ```
+
+需要生成基础可编辑 PPTX 时，可在说明用途并征得用户同意后安装固定版本依赖：
+
+```text
+python -m pip install -r requirements-runtime.txt
+python scripts/build_deck.py path/to/project.json --base-dir . --report path/to/build-report.json --update-project
+```
+
+回退运行时支持封面、章节、陈述、要点、单图、对比、多面板、流程和结论等
+语义页面类型，并保留原画布、原始证据图比例和可编辑文字/形状。它不会自动给
+封面加图、自动生成来源区、把内部风险提示写进页面，也不会逐像素照抄视觉参考
+图。已有生成结果在覆盖前会保存到 `versions/`，随后仍必须运行静态 QA。
 
 缺少 LibreOffice、PDF renderer、中文字体或其他可选能力时，Skill 会说明影响
 并询问是否安装；用户拒绝后继续采用可用的降级路径。

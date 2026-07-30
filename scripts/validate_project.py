@@ -312,6 +312,97 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
                             f"slides[{index}].source_asset_ids",
                         )
                     )
+        render = slide.get("render")
+        if render is not None and not isinstance(render, dict):
+            issues.append(
+                Issue(
+                    "error",
+                    "slide.render",
+                    "render must be an object when present",
+                    f"slides[{index}].render",
+                )
+            )
+        elif isinstance(render, dict):
+            render_type = render.get("type")
+            render_asset_ids = render.get("asset_ids", [])
+            if isinstance(render_asset_ids, list):
+                for asset_id in render_asset_ids:
+                    if not isinstance(asset_id, str):
+                        continue
+                    if asset_id not in asset_id_set:
+                        issues.append(
+                            Issue(
+                                "error",
+                                "reference.asset",
+                                f"Unknown render asset id: {asset_id}",
+                                f"slides[{index}].render.asset_ids",
+                            )
+                        )
+                    if isinstance(refs, list) and asset_id not in refs:
+                        issues.append(
+                            Issue(
+                                "error",
+                                "reference.render_asset",
+                                f"Render asset {asset_id} is not listed in "
+                                "source_asset_ids",
+                                f"slides[{index}].render.asset_ids",
+                            )
+                        )
+            items = render.get("items", [])
+            if isinstance(items, list):
+                for item_index, item in enumerate(items):
+                    if not isinstance(item, dict):
+                        continue
+                    item_asset_id = item.get("asset_id")
+                    if not isinstance(item_asset_id, str):
+                        continue
+                    if item_asset_id not in asset_id_set:
+                        issues.append(
+                            Issue(
+                                "error",
+                                "reference.asset",
+                                f"Unknown render item asset id: {item_asset_id}",
+                                f"slides[{index}].render.items[{item_index}].asset_id",
+                            )
+                        )
+                    if isinstance(refs, list) and item_asset_id not in refs:
+                        issues.append(
+                            Issue(
+                                "error",
+                                "reference.render_asset",
+                                f"Render item asset {item_asset_id} is not listed in "
+                                "source_asset_ids",
+                                f"slides[{index}].render.items[{item_index}].asset_id",
+                            )
+                        )
+            if (
+                render_type == "comparison"
+                and isinstance(render_asset_ids, list)
+                and render_asset_ids
+                and len(render_asset_ids) != 2
+            ):
+                issues.append(
+                    Issue(
+                        "error",
+                        "slide.render_asset_count",
+                        "comparison render requires exactly two explicit asset_ids",
+                        f"slides[{index}].render.asset_ids",
+                    )
+                )
+            if (
+                render_type == "multi-panel"
+                and isinstance(render_asset_ids, list)
+                and render_asset_ids
+                and len(render_asset_ids) < 2
+            ):
+                issues.append(
+                    Issue(
+                        "error",
+                        "slide.render_asset_count",
+                        "multi-panel render requires at least two explicit asset_ids",
+                        f"slides[{index}].render.asset_ids",
+                    )
+                )
     _check_unique(slide_ids, "slide id", "slides", issues)
     _check_unique(slide_numbers, "slide number", "slides", issues)
     slide_id_set = set(slide_ids)
