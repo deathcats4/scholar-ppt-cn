@@ -43,6 +43,7 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
+          cache-dependency-path: requirements-runtime.txt
       - name: Install fixed PPTX runtime dependencies
         run: python -m pip install -r requirements-runtime.txt
       - name: Run runtime build tests
