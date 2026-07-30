@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../schemas/visual-reference-item.schema.json",
+  "schema_version": "1.0.0",
+  "id": "research-gap-01",
+  "file": "../images/research-gap-01.png",
+  "role": "research-gap",
+  "asset_geometry": "comparison",
+  "density": "medium",
+  "title_mode": "takeaway",
+  "example_content": true,
+  "editable_rebuild": true,
+  "learn": [
+    "大号缺口判断与右侧证据的编辑式分栏",
+    "已知认识和关键缺口的上下对照",
+    "红色只用于真正未解决的问题"
+  ],
+  "do_not_copy": [
+    "气温曲线、年份、数值和结论",
+    "气候学术语与引用式文案",
+    "问号和警示符号的精确样式"
+  ]
+}

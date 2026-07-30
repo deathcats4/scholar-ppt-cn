@@ -4,5 +4,10 @@ __pycache__/
 *.pyc
 *.tmp
 *.bak
+.venv/
+.coverage
+.pytest_cache/
+*.egg-info/
 dist/
 outputs/
+figure_kb/

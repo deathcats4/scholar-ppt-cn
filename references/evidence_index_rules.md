@@ -1,14 +1,20 @@
 # Evidence Index Rules
 
-Internally classify source materials before production planning.
+Index evidence proportionally to the task. Use stable asset IDs.
 
-Useful fields:
-- asset ID / figure number / table number;
-- source section;
-- content summary;
-- clarity;
-- relevance to the narrative;
-- main evidence / optional support / likely unused;
-- whether a higher-resolution version is needed.
+Record when available:
 
-Do not expose this as a required user task.
+- source file;
+- PDF page;
+- figure/table/panel identifier;
+- short content summary;
+- source-asset geometry;
+- citation text;
+- slides that use the asset.
+
+For complex academic work, also track original caption, modification status,
+translation notes, units/statistical scope, license information, and
+verification status when those facts are available.
+
+Do not invent missing provenance. Missing optional details are warnings or
+follow-up work, not fabricated metadata.

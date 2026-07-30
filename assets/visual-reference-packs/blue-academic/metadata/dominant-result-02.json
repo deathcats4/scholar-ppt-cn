@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../schemas/visual-reference-item.schema.json",
+  "schema_version": "1.0.0",
+  "id": "dominant-result-02",
+  "file": "../images/dominant-result-02.png",
+  "role": "dominant-result",
+  "asset_geometry": "wide",
+  "density": "high",
+  "title_mode": "takeaway",
+  "example_content": true,
+  "editable_rebuild": true,
+  "learn": [
+    "横向主图占据页面主体",
+    "底部三点总结形成阅读闭环",
+    "数据标记与结论区保持明确层级"
+  ],
+  "do_not_copy": [
+    "示例数值、曲线、条件名称和研究结论",
+    "顶部示例标注的具体位置",
+    "固定三项总结数量"
+  ]
+}

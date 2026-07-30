@@ -1,0 +1,693 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:scholar-ppt-cn:project:1.0.0",
+  "title": "Scholar PPT CN Project State",
+  "description": "Versioned machine source of truth for one academic presentation project.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project",
+    "canvas",
+    "template",
+    "capabilities",
+    "workflow",
+    "assets",
+    "slides",
+    "visual_system",
+    "artifacts",
+    "qa"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "project": {
+      "$ref": "#/$defs/project"
+    },
+    "canvas": {
+      "$ref": "#/$defs/canvas"
+    },
+    "template": {
+      "$ref": "#/$defs/template"
+    },
+    "capabilities": {
+      "$ref": "#/$defs/capabilities"
+    },
+    "workflow": {
+      "$ref": "#/$defs/workflow"
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/asset"
+      }
+    },
+    "slides": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/slide"
+      }
+    },
+    "visual_system": {
+      "$ref": "#/$defs/visualSystem"
+    },
+    "artifacts": {
+      "$ref": "#/$defs/artifacts"
+    },
+    "qa": {
+      "$ref": "#/$defs/qa"
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nullablePath": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "slug",
+        "title",
+        "language",
+        "task_type",
+        "output_dir",
+        "source_files"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "title": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "language": {
+          "type": "string",
+          "default": "zh-CN"
+        },
+        "task_type": {
+          "enum": [
+            "create",
+            "rebuild",
+            "restyle",
+            "revise",
+            "planning-only",
+            "samples-only"
+          ]
+        },
+        "output_dir": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "source_files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "canvas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "width_inches",
+        "height_inches"
+      ],
+      "properties": {
+        "source": {
+          "enum": [
+            "user-template",
+            "existing-deck",
+            "built-in",
+            "default"
+          ]
+        },
+        "width_inches": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height_inches": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "fontRole": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "families",
+        "weight"
+      ],
+      "properties": {
+        "families": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          }
+        },
+        "weight": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 900,
+          "multipleOf": 100
+        }
+      }
+    },
+    "template": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "id",
+        "path",
+        "adherence",
+        "dna"
+      ],
+      "properties": {
+        "source": {
+          "enum": [
+            "user",
+            "built-in",
+            "neutral-tokens",
+            "existing-deck",
+            "none",
+            "legacy"
+          ]
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "$ref": "#/$defs/nullablePath"
+        },
+        "adherence": {
+          "enum": [
+            "strict",
+            "guided",
+            "creative"
+          ]
+        },
+        "dna": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "colors",
+            "font_roles",
+            "notes"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "pending",
+                "extracted",
+                "selected",
+                "not-applicable"
+              ]
+            },
+            "colors": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$"
+              },
+              "uniqueItems": true
+            },
+            "font_roles": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/$defs/fontRole"
+              }
+            },
+            "notes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "provider",
+        "notes"
+      ],
+      "properties": {
+        "available": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/capability"
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reason"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "planned",
+            "in-progress",
+            "completed",
+            "skipped",
+            "not-applicable"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "steps"
+      ],
+      "properties": {
+        "steps": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/step"
+          },
+          "required": [
+            "intake",
+            "project-state",
+            "planning",
+            "template-dna",
+            "editable-pptx",
+            "static-qa"
+          ]
+        }
+      }
+    },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "path",
+        "source_ref",
+        "geometry",
+        "summary",
+        "used_on_slides"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "type": {
+          "enum": [
+            "figure",
+            "chart",
+            "table",
+            "photo",
+            "microscopy",
+            "map",
+            "diagram",
+            "screenshot",
+            "document-excerpt",
+            "other"
+          ]
+        },
+        "path": {
+          "$ref": "#/$defs/nullablePath"
+        },
+        "source_ref": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source_file": {
+              "$ref": "#/$defs/nullablePath"
+            },
+            "page": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1
+            },
+            "figure": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "citation": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "geometry": {
+          "enum": [
+            "wide",
+            "tall",
+            "square",
+            "dense-multi-panel",
+            "photo",
+            "chart",
+            "table",
+            "process",
+            "map",
+            "screenshot",
+            "unknown"
+          ]
+        },
+        "summary": {
+          "type": "string"
+        },
+        "used_on_slides": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "slide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "number",
+        "title",
+        "narrative_section",
+        "communication_task",
+        "core_message",
+        "source_asset_ids",
+        "layout",
+        "density",
+        "asset_handling",
+        "risks"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "number": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "title": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "narrative_section": {
+          "type": "string"
+        },
+        "communication_task": {
+          "type": "string"
+        },
+        "core_message": {
+          "type": "string"
+        },
+        "source_asset_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          },
+          "uniqueItems": true
+        },
+        "layout": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "archetype_id",
+            "family_id",
+            "variant_id",
+            "decision_reason"
+          ],
+          "properties": {
+            "archetype_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "family_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "variant_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "decision_reason": {
+              "type": "string"
+            }
+          }
+        },
+        "density": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "asset_handling": {
+          "enum": [
+            "preserve",
+            "overview-detail",
+            "split",
+            "request-higher-resolution",
+            "not-applicable"
+          ]
+        },
+        "risks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "family": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "slide_ids"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "slide_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "family_id",
+        "name",
+        "slide_ids"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "family_id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "slide_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "visualSystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "families",
+        "variants",
+        "sample_slide_ids"
+      ],
+      "properties": {
+        "families": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/family"
+          }
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/variant"
+          }
+        },
+        "sample_slide_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "planning_markdown",
+        "pptx",
+        "preview_dir",
+        "montage",
+        "qa_report",
+        "qa_note"
+      ],
+      "properties": {
+        "planning_markdown": {
+          "$ref": "#/$defs/nullablePath"
+        },
+        "pptx": {
+          "$ref": "#/$defs/nullablePath"
+        },
+        "preview_dir": {
+          "$ref": "#/$defs/nullablePath"
+        },
+        "montage": {
+          "$ref": "#/$defs/nullablePath"
+        },
+        "qa_report": {
+          "$ref": "#/$defs/nullablePath"
+        },
+        "qa_note": {
+          "$ref": "#/$defs/nullablePath"
+        }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "severity",
+        "code",
+        "message",
+        "path"
+      ],
+      "properties": {
+        "severity": {
+          "enum": [
+            "error",
+            "warning",
+            "info"
+          ]
+        },
+        "code": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "message": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "path": {
+          "type": "string"
+        }
+      }
+    },
+    "qa": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "issues",
+        "skipped_checks"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "not-run",
+            "passed",
+            "passed-with-warnings",
+            "failed"
+          ]
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/issue"
+          }
+        },
+        "skipped_checks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../schemas/visual-reference-item.schema.json",
+  "schema_version": "1.0.0",
+  "id": "mechanism-02",
+  "file": "../images/mechanism-02.png",
+  "role": "mechanism",
+  "asset_geometry": "diagram",
+  "density": "medium",
+  "title_mode": "takeaway",
+  "example_content": true,
+  "editable_rebuild": true,
+  "learn": [
+    "以中心机制汇聚多个输入并连接一个结果",
+    "用节点大小和线条方向建立清晰层级",
+    "用克制的学科氛围衬托机制而不压过文字"
+  ],
+  "do_not_copy": [
+    "示例免疫微环境与治疗响应结论",
+    "示例细胞、DNA 和组织视觉",
+    "示例节点数量与环形几何"
+  ]
+}

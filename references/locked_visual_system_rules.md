@@ -1,20 +1,33 @@
 # Locked Visual System Rules
 
-After the user approves mockups, enter locked visual system internally.
+After the user approves mockups, enter a locked visual identity internally.
 
-Approved mockups become the valid design source for reconstruction and expansion.
+Approved mockups become the quality bar and design-language source for
+reconstruction and expansion. They do not become fixed page wireframes.
 
 Preserve:
 
-- header behavior;
 - title hierarchy;
 - typography rules;
 - color palette;
 - border and line style;
 - emphasis style;
 - source-material treatment;
-- caption/source-note style;
-- footer/page number;
+- annotation and callout behavior;
 - approximate density and whitespace rhythm.
 
-Locked visual system is not a fixed stencil. Slides may adapt composition inside the approved system.
+Preserve header, caption/source-note, footer, and page-number behavior only when
+the approved direction or user template actually uses them.
+
+Do not lock:
+
+- exact title wrapping;
+- fixed left/right column proportions;
+- exact image placement or panel count;
+- connector paths;
+- decorative motifs on every page;
+- sample-specific semantic accent colors.
+
+Recompose each slide from its current communication task and evidence geometry.
+The locked identity should make new pages feel related without making them look
+copied.

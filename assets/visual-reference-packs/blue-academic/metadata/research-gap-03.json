@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../schemas/visual-reference-item.schema.json",
+  "schema_version": "1.0.0",
+  "id": "research-gap-03",
+  "file": "../images/research-gap-03.png",
+  "role": "research-gap",
+  "asset_geometry": "mixed",
+  "density": "medium",
+  "title_mode": "takeaway",
+  "example_content": true,
+  "editable_rebuild": true,
+  "learn": [
+    "主证据图与文字缺口区的平衡",
+    "缺口问题作为独立阅读层级",
+    "底部轻量问题条对整页的收束"
+  ],
+  "do_not_copy": [
+    "疗效趋势、患者差异和临床结论",
+    "问号图形及右侧点阵装饰",
+    "底部问题条的具体文案"
+  ]
+}

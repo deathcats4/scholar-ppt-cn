@@ -1,14 +1,16 @@
-# Mockup Exploration Rules
+# Visual Sample Exploration Rules
 
-Image-model samples should follow the production planning table.
+Use visual samples only when requested or when they materially reduce design
+uncertainty.
 
-A valid mockup is a complete 16:9 slide, not a standalone illustration.
+A sample must use the project's actual canvas, Template DNA, core message,
+source-asset geometry, and layout intent. Let the model explore more than one
+composition response when useful; do not require a preselected page skeleton.
+Keep generated text provisional and verify it before reuse.
 
-The image model may make composition decisions inside the selected archetype family, but it must preserve:
-- narrative purpose;
-- source asset identity;
-- evidence integrity;
-- Template DNA;
-- readability.
+Generate visual requests in provider-neutral terms. Do not name a required image
+model in project state or normative rules.
 
-Mockup text is provisional and must be checked before final PPT delivery.
+Use real evidence only as permitted by the active host and user request. Replace
+temporary evidence placeholders with source assets during editable
+reconstruction.

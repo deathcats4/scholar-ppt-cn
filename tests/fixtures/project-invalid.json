@@ -1,0 +1,101 @@
+{
+  "schema_version": "1.0.0",
+  "project": {
+    "id": "invalid",
+    "slug": "Invalid Slug",
+    "title": "Invalid fixture",
+    "language": "zh-CN",
+    "task_type": "create",
+    "output_dir": "outputs/invalid",
+    "source_files": []
+  },
+  "canvas": {
+    "source": "default",
+    "width_inches": 0,
+    "height_inches": 7.5
+  },
+  "template": {
+    "source": "none",
+    "id": null,
+    "path": null,
+    "adherence": "guided",
+    "dna": {}
+  },
+  "capabilities": {},
+  "workflow": {
+    "steps": {
+      "intake": {
+        "status": "completed",
+        "reason": ""
+      },
+      "project-state": {
+        "status": "completed",
+        "reason": ""
+      },
+      "planning": {
+        "status": "completed",
+        "reason": ""
+      },
+      "template-dna": {
+        "status": "skipped",
+        "reason": ""
+      },
+      "editable-pptx": {
+        "status": "planned",
+        "reason": ""
+      },
+      "static-qa": {
+        "status": "planned",
+        "reason": ""
+      }
+    }
+  },
+  "assets": [],
+  "slides": [
+    {
+      "id": "slide-1",
+      "number": 1,
+      "title": "A",
+      "narrative_section": "",
+      "communication_task": "",
+      "core_message": "A",
+      "source_asset_ids": [
+        "missing-asset"
+      ],
+      "layout": {
+        "archetype_id": null,
+        "family_id": null,
+        "variant_id": null,
+        "decision_reason": ""
+      },
+      "density": "low",
+      "asset_handling": "not-applicable",
+      "risks": []
+    },
+    {
+      "id": "slide-1",
+      "number": 1,
+      "title": "B",
+      "narrative_section": "",
+      "communication_task": "",
+      "core_message": "B",
+      "source_asset_ids": [],
+      "layout": {
+        "archetype_id": null,
+        "family_id": null,
+        "variant_id": null,
+        "decision_reason": ""
+      },
+      "density": "low",
+      "asset_handling": "not-applicable",
+      "risks": []
+    }
+  ],
+  "visual_system": {
+    "families": [],
+    "variants": [],
+    "sample_slide_ids": []
+  },
+  "artifacts": {},
+  "qa": {}
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../schemas/visual-reference-item.schema.json",
+  "schema_version": "1.0.0",
+  "id": "comparison-03",
+  "file": "../images/comparison-03.png",
+  "role": "comparison",
+  "asset_geometry": "mixed",
+  "density": "high",
+  "title_mode": "takeaway",
+  "example_content": true,
+  "editable_rebuild": true,
+  "learn": [
+    "全局结果、关键局部放大和定量指标的三层证据",
+    "两种方法在同一行列结构中的直接比较",
+    "放大连线把整体改进追溯到局部边缘"
+  ],
+  "do_not_copy": [
+    "医学影像、分割掩膜和病灶结论",
+    "边缘距离数值和百分比",
+    "红色放大连线的精确几何"
+  ]
+}

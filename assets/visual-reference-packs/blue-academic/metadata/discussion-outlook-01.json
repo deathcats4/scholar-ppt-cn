@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../schemas/visual-reference-item.schema.json",
+  "schema_version": "1.0.0",
+  "id": "discussion-outlook-01",
+  "file": "../images/discussion-outlook-01.png",
+  "role": "discussion-outlook",
+  "asset_geometry": "comparison",
+  "density": "medium",
+  "title_mode": "takeaway",
+  "example_content": true,
+  "editable_rebuild": true,
+  "learn": [
+    "把主要支持、证据边界与替代解释放在同一讨论页",
+    "使用不对称布局区分主判断和谨慎说明",
+    "让限制条件清楚可见但不抢夺主结论"
+  ],
+  "do_not_copy": [
+    "示例公众信任研究结论",
+    "示例人物、天平和问号图标",
+    "示例左大右二段的精确几何"
+  ]
+}

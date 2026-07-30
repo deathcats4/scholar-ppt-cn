@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../schemas/visual-reference-item.schema.json",
+  "schema_version": "1.0.0",
+  "id": "cover-03",
+  "file": "../images/cover-03.png",
+  "role": "cover",
+  "asset_geometry": "square",
+  "density": "low",
+  "title_mode": "topic",
+  "example_content": true,
+  "editable_rebuild": true,
+  "learn": [
+    "左文右图的清晰封面结构",
+    "小面积真实主题图作为研究身份",
+    "长标题、元信息与图像的层级"
+  ],
+  "do_not_copy": [
+    "显微组织图及其生物学含义",
+    "示例论文标题与作者信息",
+    "人物与日期图标"
+  ]
+}

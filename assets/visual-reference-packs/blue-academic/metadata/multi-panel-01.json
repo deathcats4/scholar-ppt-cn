@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../schemas/visual-reference-item.schema.json",
+  "schema_version": "1.0.0",
+  "id": "multi-panel-01",
+  "file": "../images/multi-panel-01.png",
+  "role": "multi-panel",
+  "asset_geometry": "dense-multi-panel",
+  "density": "high",
+  "title_mode": "takeaway",
+  "example_content": true,
+  "editable_rebuild": true,
+  "learn": [
+    "四类异质证据按统一列宽组织",
+    "每个面板由短解释、主图和一句结论组成",
+    "高密度综合证据页的稳定网格"
+  ],
+  "do_not_copy": [
+    "矿物、元素、同位素和空间分布数据",
+    "坐标、单位、图例和还原环境结论",
+    "四栏的具体面板内容"
+  ]
+}

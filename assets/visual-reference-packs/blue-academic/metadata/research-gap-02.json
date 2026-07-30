@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../schemas/visual-reference-item.schema.json",
+  "schema_version": "1.0.0",
+  "id": "research-gap-02",
+  "file": "../images/research-gap-02.png",
+  "role": "research-gap",
+  "asset_geometry": "comparison",
+  "density": "high",
+  "title_mode": "takeaway",
+  "example_content": true,
+  "editable_rebuild": true,
+  "learn": [
+    "总体趋势与个体差异的双证据并列",
+    "一处红色异常信号建立问题焦点",
+    "底部一句话收束研究空白"
+  ],
+  "do_not_copy": [
+    "患者散点、曲线、数值和随访时间",
+    "临床结论和研究问题",
+    "底部问题条的精确几何"
+  ]
+}

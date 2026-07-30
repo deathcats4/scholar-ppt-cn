@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../schemas/visual-reference-item.schema.json",
+  "schema_version": "1.0.0",
+  "id": "multi-panel-02",
+  "file": "../images/multi-panel-02.png",
+  "role": "multi-panel",
+  "asset_geometry": "dense-multi-panel",
+  "density": "high",
+  "title_mode": "takeaway",
+  "example_content": true,
+  "editable_rebuild": true,
+  "learn": [
+    "左侧主表型与右侧分子证据的主从关系",
+    "图像、条带图、柱状图和散点图的统一编排",
+    "用分区标签建立高密度证据阅读顺序"
+  ],
+  "do_not_copy": [
+    "细胞图像、蛋白条带、荧光图和统计结果",
+    "标志物名称、显著性标记和实验结论",
+    "面板卡片与蓝色标签的精确样式"
+  ]
+}

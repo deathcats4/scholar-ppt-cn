@@ -1,8 +1,18 @@
 # Fallback Layout Archetype Library
 
-This library is used for production planning, template-direct editable generation, and fallback pages when approved mockups are unavailable.
+Use this library as an internal vocabulary of composition possibilities for
+production planning and editable generation. It is not a mandatory page
+catalog, and its labels do not lock geometry.
 
 It is internal. Do not ask the user to manually choose archetypes.
+
+## Contents
+
+- Opening, agenda, background, gap, and objective
+- Study area/data and methods
+- Single-figure, multi-panel, chart, and table evidence
+- Comparison, mechanism, discussion, and conclusions
+- Closing pages and selection rules
 
 ## Opening / cover
 
@@ -126,7 +136,12 @@ Z3. Formal ending page matching template identity.
 ## Selection rules
 
 - Match archetype to source-asset geometry.
-- Rotate archetypes across long decks.
+- Start from the communication task and real evidence, then adapt or combine
+  compatible patterns.
+- Vary composition intentionally across long decks; do not rotate patterns
+  mechanically.
 - Do not use the same skeleton more than twice in a row.
 - If a dense source asset is unreadable, use overview + detail zoom or split across slides.
 - Apply Template DNA to colors, typography, borders, captions, spacing, header/footer.
+- Depart from the listed patterns when none serves the current content. Record
+  the layout reason instead of forcing a poor fit.
