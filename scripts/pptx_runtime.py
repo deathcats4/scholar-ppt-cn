@@ -74,6 +74,7 @@ class BuildContext:
     theme: Theme
     assets: dict[str, dict[str, Any]]
     issues: list[Issue]
+    rendered_asset_ids: set[str]
 
 
 def _hex(value: str | None, fallback: str) -> str:
@@ -393,10 +394,13 @@ def _resolve_asset_path(context: BuildContext, asset: dict[str, Any]) -> Path | 
 
 def _asset_ids(slide_data: dict[str, Any], explicit_only: bool = False) -> list[str]:
     render = slide_data.get("render")
-    if isinstance(render, dict) and isinstance(render.get("asset_ids"), list):
+    if (
+        isinstance(render, dict)
+        and "asset_ids" in render
+        and isinstance(render.get("asset_ids"), list)
+    ):
         values = [item for item in render["asset_ids"] if isinstance(item, str)]
-        if values or explicit_only:
-            return values
+        return values
     if explicit_only:
         return []
     values = slide_data.get("source_asset_ids", [])
@@ -465,13 +469,25 @@ def _add_image_contain(
             )
         )
     _add_rect(slide, x, y, w, h, fill="FFFFFF", line=context.theme.line)
-    slide.shapes.add_picture(
-        str(path),
-        Inches(draw_x),
-        Inches(draw_y),
-        width=Inches(draw_w),
-        height=Inches(draw_h),
-    )
+    try:
+        slide.shapes.add_picture(
+            str(path),
+            Inches(draw_x),
+            Inches(draw_y),
+            width=Inches(draw_w),
+            height=Inches(draw_h),
+        )
+    except Exception as exc:
+        context.issues.append(
+            Issue(
+                "error",
+                "build.asset_insert",
+                f"Cannot insert image into PPTX: {type(exc).__name__}: {exc}",
+                asset_id,
+            )
+        )
+        return False
+    context.rendered_asset_ids.add(asset_id)
     if label:
         _add_text(
             slide,
@@ -498,6 +514,29 @@ def _render_items(slide_data: dict[str, Any]) -> list[dict[str, Any]]:
     return [item for item in items if isinstance(item, dict)] if isinstance(items, list) else []
 
 
+def _items_for_assets(
+    slide_data: dict[str, Any],
+    asset_ids: list[str],
+) -> list[dict[str, Any]]:
+    items = _render_items(slide_data)
+    by_asset = {
+        item["asset_id"]: item
+        for item in items
+        if isinstance(item.get("asset_id"), str)
+    }
+    bodies = _body(slide_data)
+    resolved: list[dict[str, Any]] = []
+    for index, asset_id in enumerate(asset_ids):
+        item = dict(by_asset.get(asset_id, {}))
+        if not item and index < len(items) and items[index].get("asset_id") is None:
+            item = dict(items[index])
+        if not str(item.get("body") or "").strip() and index < len(bodies):
+            item["body"] = bodies[index]
+        item["asset_id"] = asset_id
+        resolved.append(item)
+    return resolved
+
+
 def infer_render_type(slide_data: dict[str, Any]) -> str:
     render_type = _render(slide_data).get("type")
     if isinstance(render_type, str) and render_type in _INTERNAL_RENDER_TYPES:
@@ -508,14 +547,14 @@ def infer_render_type(slide_data: dict[str, Any]) -> str:
     asset_count = len(_asset_ids(slide_data))
     if number == 1 or "封面" in section:
         return "cover"
-    if any(keyword in title + section for keyword in ("结论", "总结", "展望")):
-        return "conclusion"
     if asset_count >= 3:
         return "multi-panel"
     if asset_count == 2:
         return "comparison"
     if asset_count == 1:
         return "figure"
+    if any(keyword in title + section for keyword in ("结论", "总结", "展望")):
+        return "conclusion"
     task = str(slide_data.get("communication_task") or "")
     if any(keyword in title + task for keyword in ("流程", "步骤", "机制", "路径")):
         return "process"
@@ -534,7 +573,11 @@ def _body(slide_data: dict[str, Any]) -> list[str]:
 
 def _render_cover(slide: Any, context: BuildContext, data: dict[str, Any]) -> None:
     render = _render(data)
-    explicit_assets = _asset_ids(data, explicit_only=True)
+    explicit_assets = (
+        _asset_ids(data)
+        if render.get("type") == "cover"
+        else _asset_ids(data, explicit_only=True)
+    )
     has_visual = bool(explicit_assets)
     title_w = context.width * (0.56 if has_visual else 0.80)
     _add_text(
@@ -786,7 +829,7 @@ def _render_figure(slide: Any, context: BuildContext, data: dict[str, Any]) -> N
 def _render_comparison(slide: Any, context: BuildContext, data: dict[str, Any]) -> None:
     _add_page_header(slide, context, data, centered=True)
     ids = _asset_ids(data)
-    items = _render_items(data)
+    items = _items_for_assets(data, ids)
     gap = 0.34
     panel_w = (context.width - 1.36 - gap) / 2
     for index in range(2):
@@ -848,8 +891,8 @@ def _render_comparison(slide: Any, context: BuildContext, data: dict[str, Any]) 
 
 def _render_multi_panel(slide: Any, context: BuildContext, data: dict[str, Any]) -> None:
     _add_page_header(slide, context, data)
-    ids = _asset_ids(data)[:4]
-    items = _render_items(data)
+    ids = _asset_ids(data)
+    items = _items_for_assets(data, ids)
     columns = 2
     rows = 2 if len(ids) > 2 else 1
     gap_x, gap_y = 0.28, 0.32
@@ -1088,6 +1131,7 @@ def build_presentation(
             if isinstance(item, dict) and isinstance(item.get("id"), str)
         },
         issues=issues,
+        rendered_asset_ids=set(),
     )
     rendered: list[dict[str, Any]] = []
     slides = sorted(
@@ -1095,6 +1139,7 @@ def build_presentation(
         key=lambda item: item.get("number", 10**9),
     )
     for slide_data in slides:
+        context.rendered_asset_ids = set()
         slide = presentation.slides.add_slide(presentation.slide_layouts[6])
         slide.background.fill.solid()
         slide.background.fill.fore_color.rgb = _rgb(context.theme.background)
@@ -1111,6 +1156,29 @@ def build_presentation(
             "conclusion": _render_conclusion,
         }[render_type]
         renderer(slide, context, slide_data)
+        source_asset_ids = {
+            item
+            for item in slide_data.get("source_asset_ids", [])
+            if isinstance(item, str)
+        }
+        ignored_asset_ids = {
+            item
+            for item in _render(slide_data).get("ignored_asset_ids", [])
+            if isinstance(item, str)
+        }
+        unused_asset_ids = sorted(
+            source_asset_ids - context.rendered_asset_ids - ignored_asset_ids
+        )
+        for asset_id in unused_asset_ids:
+            issues.append(
+                Issue(
+                    "warning",
+                    "build.asset_unused",
+                    "Declared slide evidence was not rendered; select it in "
+                    "render.asset_ids or explicitly ignore it with a reason",
+                    f"{slide_data.get('id', '')}:{asset_id}",
+                )
+            )
         number = slide_data.get("number")
         if isinstance(number, int):
             _add_page_number(slide, context, number)
@@ -1132,6 +1200,8 @@ def build_presentation(
                 "id": slide_data.get("id"),
                 "number": number,
                 "render_type": render_type,
+                "rendered_asset_ids": sorted(context.rendered_asset_ids),
+                "unused_asset_ids": unused_asset_ids,
             }
         )
     if not slides:

@@ -5,6 +5,7 @@ import os
 import shutil
 import sys
 import tempfile
+import traceback
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -38,6 +39,12 @@ def _output_path(
     output_dir = project.get("project", {}).get("output_dir", "outputs/project")
     path = Path(str(output_dir)) / "deck.pptx"
     return path if path.is_absolute() else (base_dir / path)
+
+
+def _resolve_output(path: Path | None, base_dir: Path) -> Path | None:
+    if path is None:
+        return None
+    return (path if path.is_absolute() else base_dir / path).resolve()
 
 
 def _declared_input_paths(
@@ -124,8 +131,10 @@ def build_from_project(
     *,
     base_dir: Path,
     output: Path | None = None,
+    report_path: Path | None = None,
     update_project: bool = False,
     preserve_existing: bool = True,
+    debug: bool = False,
 ) -> dict[str, Any]:
     issues: list[Issue] = []
     try:
@@ -137,18 +146,11 @@ def build_from_project(
             project=str(project_path),
         )
 
-    validation_issues = validate_project(project)
-    issues.extend(validation_issues)
-    if any(issue.severity == "error" for issue in issues):
-        return make_report(
-            "build_deck",
-            issues,
-            project=str(project_path),
-            output=None,
-            rendered_slides=[],
-        )
-
     target = _output_path(project, base_dir, output).resolve()
+    report_target = _resolve_output(report_path, base_dir)
+    protected_inputs = _declared_input_paths(project, base_dir) | {
+        project_path.resolve()
+    }
     if target.suffix.lower() != ".pptx":
         issues.append(
             Issue(
@@ -167,7 +169,7 @@ def build_from_project(
                 str(target),
             )
         )
-    if target in _declared_input_paths(project, base_dir):
+    if target in protected_inputs:
         issues.append(
             Issue(
                 "error",
@@ -176,19 +178,82 @@ def build_from_project(
                 str(target),
             )
         )
+    if report_target is not None:
+        if report_target.suffix.lower() != ".json":
+            issues.append(
+                Issue(
+                    "error",
+                    "report.extension",
+                    "Build report path must end with .json",
+                    str(report_target),
+                )
+            )
+        if report_target in protected_inputs:
+            issues.append(
+                Issue(
+                    "error",
+                    "report.input_conflict",
+                    "Build report cannot overwrite project.json or a declared "
+                    "source, template, or asset",
+                    str(report_target),
+                )
+            )
+        if report_target == target:
+            issues.append(
+                Issue(
+                    "error",
+                    "output.path_conflict",
+                    "PPTX output and build report must use different paths",
+                    str(report_target),
+                )
+            )
+
+    report_writable = report_target is not None and not any(
+        issue.code
+        in {
+            "report.extension",
+            "report.input_conflict",
+            "output.path_conflict",
+        }
+        for issue in issues
+    )
+    validation_issues = validate_project(project)
+    issues.extend(validation_issues)
     if any(issue.severity == "error" for issue in issues):
         return make_report(
             "build_deck",
             issues,
             project=str(project_path),
             output=str(target),
+            report_output=str(report_target) if report_target else None,
+            report_writable=report_writable,
             rendered_slides=[],
         )
 
-    presentation, runtime_issues, rendered = build_presentation(
-        project,
-        base_dir=base_dir,
-    )
+    try:
+        presentation, runtime_issues, rendered = build_presentation(
+            project,
+            base_dir=base_dir,
+        )
+    except Exception as exc:
+        details: dict[str, Any] = {
+            "project": str(project_path),
+            "output": str(target),
+            "report_output": str(report_target) if report_target else None,
+            "report_writable": report_writable,
+            "rendered_slides": [],
+        }
+        if debug:
+            details["debug_traceback"] = traceback.format_exc()
+        issues.append(
+            Issue(
+                "error",
+                "build.runtime",
+                f"Unexpected runtime failure: {type(exc).__name__}: {exc}",
+                "build_presentation",
+            )
+        )
+        return make_report("build_deck", issues, **details)
     issues.extend(runtime_issues)
     if presentation is None or any(issue.severity == "error" for issue in issues):
         return make_report(
@@ -196,6 +261,8 @@ def build_from_project(
             issues,
             project=str(project_path),
             output=str(target),
+            report_output=str(report_target) if report_target else None,
+            report_writable=report_writable,
             rendered_slides=rendered,
         )
 
@@ -207,9 +274,14 @@ def build_from_project(
         if update_project:
             _update_project(project, output=target, base_dir=base_dir)
             write_json(project_path, project)
-    except (OSError, ValueError, TypeError) as exc:
+    except Exception as exc:
         issues.append(
-            Issue("error", "output.write", str(exc), str(target))
+            Issue(
+                "error",
+                "output.write",
+                f"{type(exc).__name__}: {exc}",
+                str(target),
+            )
         )
 
     return make_report(
@@ -217,6 +289,8 @@ def build_from_project(
         issues,
         project=str(project_path),
         output=str(target),
+        report_output=str(report_target) if report_target else None,
+        report_writable=report_writable,
         bytes=target.stat().st_size if target.is_file() else 0,
         backup=str(backup) if backup else None,
         update_project=update_project,
@@ -240,6 +314,11 @@ def main() -> int:
     )
     parser.add_argument("--output", type=Path)
     parser.add_argument("--report", type=Path)
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Include a traceback in the JSON report for unexpected runtime failures.",
+    )
     parser.add_argument("--update-project", action="store_true")
     parser.add_argument(
         "--no-backup",
@@ -251,11 +330,39 @@ def main() -> int:
         args.project.resolve(),
         base_dir=args.base_dir.resolve(),
         output=args.output,
+        report_path=args.report,
         update_project=args.update_project,
         preserve_existing=not args.no_backup,
+        debug=args.debug,
     )
-    if args.report:
-        write_json(args.report, report)
+    report_target = report.get("details", {}).get("report_output")
+    if report_target and report.get("details", {}).get("report_writable"):
+        try:
+            write_json(report_target, report)
+        except Exception as exc:
+            existing = [
+                Issue(
+                    item.get("severity", "error"),
+                    item.get("code", "unknown"),
+                    item.get("message", ""),
+                    item.get("path", ""),
+                )
+                for item in report.get("issues", [])
+                if isinstance(item, dict)
+            ]
+            existing.append(
+                Issue(
+                    "error",
+                    "report.write",
+                    f"{type(exc).__name__}: {exc}",
+                    str(report_target),
+                )
+            )
+            report = make_report(
+                "build_deck",
+                existing,
+                **report.get("details", {}),
+            )
     print_report(report)
     return 1 if report["summary"]["error"] else 0
 

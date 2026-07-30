@@ -325,6 +325,11 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
         elif isinstance(render, dict):
             render_type = render.get("type")
             render_asset_ids = render.get("asset_ids", [])
+            effective_asset_ids = (
+                render_asset_ids
+                if "asset_ids" in render and isinstance(render_asset_ids, list)
+                else refs if isinstance(refs, list) else []
+            )
             if isinstance(render_asset_ids, list):
                 for asset_id in render_asset_ids:
                     if not isinstance(asset_id, str):
@@ -349,6 +354,7 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
                             )
                         )
             items = render.get("items", [])
+            item_asset_ids: list[str] = []
             if isinstance(items, list):
                 for item_index, item in enumerate(items):
                     if not isinstance(item, dict):
@@ -356,6 +362,7 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
                     item_asset_id = item.get("asset_id")
                     if not isinstance(item_asset_id, str):
                         continue
+                    item_asset_ids.append(item_asset_id)
                     if item_asset_id not in asset_id_set:
                         issues.append(
                             Issue(
@@ -375,34 +382,91 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
                                 f"slides[{index}].render.items[{item_index}].asset_id",
                             )
                         )
-            if (
-                render_type == "comparison"
-                and isinstance(render_asset_ids, list)
-                and render_asset_ids
-                and len(render_asset_ids) != 2
-            ):
-                issues.append(
-                    Issue(
-                        "error",
-                        "slide.render_asset_count",
-                        "comparison render requires exactly two explicit asset_ids",
-                        f"slides[{index}].render.asset_ids",
-                    )
+            if render_type in {"comparison", "multi-panel"}:
+                effective_set = {
+                    item for item in effective_asset_ids if isinstance(item, str)
+                }
+                for item_asset_id in item_asset_ids:
+                    if item_asset_id not in effective_set:
+                        issues.append(
+                            Issue(
+                                "error",
+                                "reference.render_item_mapping",
+                                f"Render item asset {item_asset_id} is not selected "
+                                "by the effective render asset list",
+                                f"slides[{index}].render.items",
+                            )
+                        )
+
+            ignored_asset_ids = render.get("ignored_asset_ids", [])
+            if isinstance(ignored_asset_ids, list):
+                selected = (
+                    {
+                        item
+                        for item in effective_asset_ids
+                        if isinstance(item, str)
+                    }
+                    if render_type
+                    in {"cover", "figure", "comparison", "multi-panel"}
+                    else set()
                 )
-            if (
-                render_type == "multi-panel"
-                and isinstance(render_asset_ids, list)
-                and render_asset_ids
-                and len(render_asset_ids) < 2
-            ):
-                issues.append(
-                    Issue(
-                        "error",
-                        "slide.render_asset_count",
-                        "multi-panel render requires at least two explicit asset_ids",
-                        f"slides[{index}].render.asset_ids",
+                for ignored_asset_id in ignored_asset_ids:
+                    if not isinstance(ignored_asset_id, str):
+                        continue
+                    if isinstance(refs, list) and ignored_asset_id not in refs:
+                        issues.append(
+                            Issue(
+                                "error",
+                                "reference.ignored_asset",
+                                f"Ignored asset {ignored_asset_id} is not listed in "
+                                "source_asset_ids",
+                                f"slides[{index}].render.ignored_asset_ids",
+                            )
+                        )
+                    if ignored_asset_id in selected:
+                        issues.append(
+                            Issue(
+                                "error",
+                                "reference.ignored_asset",
+                                f"Asset {ignored_asset_id} cannot be both selected "
+                                "and ignored",
+                                f"slides[{index}].render.ignored_asset_ids",
+                            )
+                        )
+                if ignored_asset_ids and (
+                    not isinstance(render.get("ignore_reason"), str)
+                    or not render.get("ignore_reason", "").strip()
+                ):
+                    issues.append(
+                        Issue(
+                            "error",
+                            "slide.ignore_reason",
+                            "ignored_asset_ids requires a non-empty ignore_reason",
+                            f"slides[{index}].render.ignore_reason",
+                        )
                     )
-                )
+
+            effective_count = len(
+                [item for item in effective_asset_ids if isinstance(item, str)]
+            )
+            count_rules = {
+                "cover": (0, 1, "at most one"),
+                "figure": (1, 1, "exactly one"),
+                "comparison": (2, 2, "exactly two"),
+                "multi-panel": (2, 4, "between two and four"),
+            }
+            if render_type in count_rules:
+                minimum, maximum, label = count_rules[render_type]
+                if not minimum <= effective_count <= maximum:
+                    issues.append(
+                        Issue(
+                            "error",
+                            "slide.render_asset_count",
+                            f"{render_type} render requires {label} effective "
+                            f"asset_ids; found {effective_count}",
+                            f"slides[{index}].render.asset_ids",
+                        )
+                    )
     _check_unique(slide_ids, "slide id", "slides", issues)
     _check_unique(slide_numbers, "slide number", "slides", issues)
     slide_id_set = set(slide_ids)

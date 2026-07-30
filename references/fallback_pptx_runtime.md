@@ -68,9 +68,21 @@ Supported types are:
 - `process`;
 - `conclusion`.
 
-The optional fields are `subtitle`, `body`, `items`, `asset_ids`, and `footer`.
-Every render asset must exist and must also appear in the slide's
-`source_asset_ids`.
+The optional fields are `subtitle`, `body`, `items`, `asset_ids`,
+`ignored_asset_ids`, `ignore_reason`, and `footer`. Every render asset must
+exist and must also appear in the slide's `source_asset_ids`.
+
+When `asset_ids` is omitted, the runtime uses `source_asset_ids` as the
+effective render list. `figure` requires one effective asset, `comparison`
+requires two, `multi-panel` requires two to four, and `cover` permits at most
+one. For comparison and multi-panel pages, `items[].asset_id` binds its label
+and explanation to that asset instead of relying on array position. A short
+`body` array remains a valid fallback when no item metadata is supplied.
+
+The build report records which declared evidence assets were actually placed.
+If a page intentionally leaves declared evidence out, list those IDs in
+`ignored_asset_ids` and give a concise `ignore_reason`; otherwise the runtime
+reports `build.asset_unused`.
 
 Keep this object semantic. Do not store pixel coordinates or reproduce an
 entire visual-reference image as a fixed stencil. Without `render`, the runtime
@@ -84,6 +96,11 @@ python scripts/build_deck.py <project.json> \
   --report <build-report.json> \
   --update-project
 ```
+
+PPTX and report paths are validated together. Neither may overwrite
+`project.json`, a declared source/template/asset, or each other. Unexpected
+runtime failures are returned as structured `build.runtime` errors; add
+`--debug` only when a traceback is useful for development.
 
 The builder:
 

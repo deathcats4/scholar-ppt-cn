@@ -110,6 +110,10 @@ python scripts/build_deck.py path/to/project.json --base-dir . --report path/to/
 从 JSON 生成的用户视图。JSON 只保存路径、ID、短摘要、映射、决策和 QA
 结果，不嵌入 PDF、图片或全文。
 
+当前 `1.0.0` Schema 随 v3.4 Beta 共同试用，在 v3.4.0 稳定版前仍可能根据
+真实运行反馈调整；它不是对旧开发期 JSON 的长期兼容承诺。稳定版如需进行
+不兼容修订，将先提供版本迁移支持。
+
 示例见 `tests/fixtures/project-valid.json`。
 
 ## 模板

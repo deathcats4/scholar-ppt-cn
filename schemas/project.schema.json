@@ -485,6 +485,19 @@
           },
           "uniqueItems": true
         },
+        "ignored_asset_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          },
+          "uniqueItems": true
+        },
+        "ignore_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "footer": {
           "type": [
             "string",
