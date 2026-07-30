@@ -1,8 +1,8 @@
 # Changelog
 
-## 3.4.0-dev
+## 3.4.0-beta.1
 
-Host-agnostic structured workflow under local development.
+Host-agnostic structured workflow beta candidate.
 
 ### Added
 
@@ -14,6 +14,10 @@ Host-agnostic structured workflow under local development.
 - Deterministic PPTX ZIP/OOXML static QA and generated readable QA notes.
 - Deterministic Skill packaging with manifest and SHA-256.
 - Unit fixtures and cross-platform GitHub Actions validation.
+- Provider-neutral visual-reference-pack schemas, metadata validation, prompt
+  export, and an initial active blue academic reference family.
+- Static QA warnings for defensive or builder-facing meta-language that should
+  remain internal instead of appearing in final slides.
 
 ### Changed
 
@@ -32,12 +36,20 @@ Host-agnostic structured workflow under local development.
   guessing.
 - Changed rendered QA to montage-first anomaly triage and individual inspection
   of affected slides only.
+- Made content planning authoritative over visual references and treated
+  reference images as late aesthetic anchors rather than editable page
+  stencils.
+- Kept epistemic safeguards internal while allowing concise evidence limits and
+  uncertainty statements in audience-facing slide copy.
 
-### Development note
+### Beta note
 
-- The legacy reference template remains tracked during local testing and has not
-  been removed or replaced.
-- No commit, push, release, or remote issue action is part of this local phase.
+- v3.3.1 remains available as the stable release and is not overwritten by this
+  beta.
+- The legacy reference template remains tracked and is not selected
+  automatically by the redesigned workflow.
+- Visual-reference coverage, cross-host generation consistency, and internal
+  schemas may continue to change before v3.4.0.
 
 ## 3.3.1-codex-artifact-workflow
 

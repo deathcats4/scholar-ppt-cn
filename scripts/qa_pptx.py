@@ -45,6 +45,24 @@ INTERNAL_TERMS = (
     "source gap",
     "来源缺口",
 )
+DEFENSIVE_META_PATTERNS = (
+    (
+        "instructional caution",
+        re.compile(r"(?:注意|警告|提示)\s*[：:].{0,24}(?:间接|不能|不要|避免|误写|误解|推断)"),
+    ),
+    (
+        "misreading instruction",
+        re.compile(r"(?:不能|不要|避免)(?:把|将).{0,48}(?:误写|误解|理解为|视为|当作|等同)"),
+    ),
+    (
+        "reviewer principle",
+        re.compile(r"(?:评价原则|解读原则|阅读提示)\s*[：:]"),
+    ),
+    (
+        "meta contribution framing",
+        re.compile(r"(?:最重要的)?贡献.{0,32}(?:不是|并非).{0,48}(?:而是|而在于)"),
+    ),
+)
 REQUIRED_PARTS = {
     "[Content_Types].xml",
     "_rels/.rels",
@@ -377,6 +395,16 @@ def inspect_pptx(path: Path, project: dict[str, Any] | None = None) -> dict[str,
                             "error",
                             "pptx.internal_term",
                             f"Visible internal workflow term: {term}",
+                            f"slide:{slide_index}",
+                        )
+                    )
+            for label, pattern in DEFENSIVE_META_PATTERNS:
+                if pattern.search(text):
+                    issues.append(
+                        Issue(
+                            "warning",
+                            "pptx.defensive_meta_language",
+                            f"Visible copy may read like an agent/reviewer instruction: {label}",
                             f"slide:{slide_index}",
                         )
                     )

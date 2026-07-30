@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../schemas/visual-reference-item.schema.json",
+  "schema_version": "1.0.0",
+  "id": "conclusion-01",
+  "file": "../images/conclusion-01.png",
+  "role": "conclusion",
+  "asset_geometry": "low-asset",
+  "density": "low",
+  "title_mode": "takeaway",
+  "example_content": true,
+  "editable_rebuild": true,
+  "learn": [
+    "用三条编号结论形成稳定的问答停留页",
+    "依靠字号、对齐和留白而不是卡片建立层级",
+    "用一句中心判断统领三条结论"
+  ],
+  "do_not_copy": [
+    "示例三条研究结论的文字",
+    "示例编号内容和数量",
+    "示例分隔线长度与位置"
+  ]
+}

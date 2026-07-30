@@ -26,14 +26,17 @@ names, or facts that the agent can discover safely.
 - register the request and source files;
 - create or update `project.json`;
 - determine canvas and template behavior;
-- create or update affected slide records;
+- create or update affected slide records, including communication task,
+  evidence mapping, and source-asset geometry before reference retrieval;
 - validate project state;
 - run the strongest QA available for every produced artifact.
 
 ## Perform when useful
 
 - evidence index: when source figures, tables, screenshots, or citations matter;
-- family blueprint: when several slides benefit from reusable visual families;
+- family blueprint: when several slides benefit from coordinated identity,
+  communication behavior, and cross-slide rhythm; do not use it to lock page
+  geometry;
 - visual samples: ask when a new or long deck has no approved visual system or
   visual uncertainty is high; follow the user's choice;
 - editable PPTX: when requested and the host can write PPTX;
@@ -45,6 +48,10 @@ not-applicable step must have a reason.
 
 Representative samples may be editable template-based slides. Image generation
 is optional and must not be treated as a prerequisite for sample approval.
+
+When an approved visual-reference pack is used, retrieve candidates only after
+the current slide's task and evidence geometry are known. Treat references as
+aesthetic anchors, then compose from the current content.
 
 For a partial revision, preserve stable IDs and update only affected slide,
 asset, artifact, and QA records.

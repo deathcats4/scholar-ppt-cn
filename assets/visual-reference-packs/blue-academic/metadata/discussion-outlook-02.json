@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../schemas/visual-reference-item.schema.json",
+  "schema_version": "1.0.0",
+  "id": "discussion-outlook-02",
+  "file": "../images/discussion-outlook-02.png",
+  "role": "discussion-outlook",
+  "asset_geometry": "mixed",
+  "density": "medium",
+  "title_mode": "takeaway",
+  "example_content": true,
+  "editable_rebuild": true,
+  "learn": [
+    "以局限与意义构成一页讨论中的两级判断",
+    "左侧文本说明与右侧空间时间尺度示意相互支持",
+    "用大留白保持谨慎、平静的学术语气"
+  ],
+  "do_not_copy": [
+    "示例地图区域、时间尺度和研究结论",
+    "示例警示与灯泡图标",
+    "示例地图轮廓和时间轴"
+  ]
+}

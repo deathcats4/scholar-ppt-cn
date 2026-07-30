@@ -55,8 +55,8 @@ deterministic end-to-end PPTX generation engine.
 
 1. User-provided templates take priority. Preserve their native canvas size,
    including 4:3 or custom dimensions.
-2. When no user template exists, default to a 16:9 built-in template or neutral
-   design-token preset.
+2. When no user template exists, default to 16:9 and use an approved built-in
+   visual reference pack, built-in template, or neutral design-token preset.
 3. The intended built-in set is three original, neutral academic templates:
    concise technical, dark report, and warm humanities.
 4. Each built-in template must ship with:
@@ -76,11 +76,14 @@ deterministic end-to-end PPTX generation engine.
 ## Typography
 
 1. Prefer typography roles extracted from the user template.
-2. For built-in templates, define title, heading, body, caption, source-note,
-   and emphasis roles separately.
-3. Do not require all CJK text to use Microsoft YaHei or bold.
-4. Use platform-aware CJK fallback stacks and check font availability.
-5. QA should detect missing fonts, substitutions, unreadable sizing, and lost
+2. Without a user template, use Microsoft YaHei for editable Chinese text and
+   Times New Roman for independent editable Latin text by default.
+3. Do not infer a concrete font from pixels in a visual reference image.
+4. Keep title, heading, body, caption, source-note, and emphasis roles distinct;
+   do not make all Chinese text bold.
+5. Check font availability. If the preferred font is missing, ask whether to
+   install it when practical, otherwise use a documented fallback.
+6. QA should detect missing fonts, substitutions, unreadable sizing, and lost
    hierarchy rather than merely checking `bold=true`.
 
 ## Evidence and editability
@@ -108,6 +111,40 @@ deterministic end-to-end PPTX generation engine.
 5. A workflow without image generation must remain complete and useful.
 6. Representative samples may be editable template-based slides and must not
    require image generation.
+
+## Visual reference packs
+
+1. Use pre-generated visual reference images as aesthetic and composition
+   references, not as final slide backgrounds or scientific evidence.
+2. Keep the authority order explicit:
+   - planning decides the narrative, slide task, core message, and evidence;
+   - the visual family decides deck-wide identity, hierarchy, annotation
+     behavior, density range, and cross-slide rhythm;
+   - reference images provide an aesthetic target and composition vocabulary;
+   - the builder decides actual page geometry from current content and
+     source-asset geometry.
+3. Complete the slide communication task and evidence-geometry classification
+   before retrieving reference images. Do not let a reference image determine
+   slide count, evidence coverage, or narrative order.
+4. Keep a pack in `draft` status until its images pass human visual review.
+5. Store one compact JSON sidecar per approved image. Filter metadata first and
+   open no more than 1–3 candidate images during ordinary generation.
+6. Learn hierarchy, whitespace, evidence dominance, annotation language, and
+   page rhythm. Do not copy example text, synthetic data, specific research
+   subjects, or exact geometry. Do not derive a fixed page stencil merely
+   because a reference image was selected.
+7. Rebuild final slides with editable objects and current-project evidence. Do
+   not crop or reuse pixels from a full-slide reference image.
+8. Keep one visual family across a deck. A user template remains authoritative
+   for canvas, branding, palette, and typography.
+9. Treat family colors as identity colors. Introduce project-specific semantic
+   accents only when they clarify current evidence or mechanism roles; keep
+   them local and restrained instead of promoting them to the whole deck from
+   one reference image.
+10. If vision is unavailable, continue from pack JSON and textual design notes.
+11. The first blue academic pack has passed its initial A/B direction test,
+    human review, manifest validation, and role-coverage validation. It may be
+    active, but future structural revisions must rerun those checks.
 
 ## Output layout
 

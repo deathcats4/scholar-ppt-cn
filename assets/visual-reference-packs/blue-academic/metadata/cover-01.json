@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../schemas/visual-reference-item.schema.json",
+  "schema_version": "1.0.0",
+  "id": "cover-01",
+  "file": "../images/cover-01.png",
+  "role": "cover",
+  "asset_geometry": "low-asset",
+  "density": "low",
+  "title_mode": "topic",
+  "example_content": true,
+  "editable_rebuild": true,
+  "learn": [
+    "长中文标题的断行与大留白",
+    "纯排版封面的视觉重心",
+    "轻量抽象线条对空白区域的平衡"
+  ],
+  "do_not_copy": [
+    "示例论文标题与作者信息",
+    "右下角圆弧和节点的精确几何",
+    "人物与日期图标"
+  ]
+}

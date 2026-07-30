@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../schemas/visual-reference-item.schema.json",
+  "schema_version": "1.0.0",
+  "id": "research-question-02",
+  "file": "../images/research-question-02.png",
+  "role": "research-question",
+  "asset_geometry": "diagram",
+  "density": "low",
+  "title_mode": "topic",
+  "example_content": true,
+  "editable_rebuild": true,
+  "learn": [
+    "核心研究变量之间的因果或调节关系",
+    "中心约束节点与结果变量的层级",
+    "极简关系图在学术页面中的占比"
+  ],
+  "do_not_copy": [
+    "视觉定位问题与变量名称",
+    "场景、特征和靶心图标",
+    "连线和节点的精确位置"
+  ]
+}

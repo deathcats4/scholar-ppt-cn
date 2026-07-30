@@ -6,6 +6,16 @@
 或参考模板出发，建立结构化项目状态、规划页面、按需探索视觉方向、生成或指导
 生成可编辑 PPTX，并执行确定性的静态 QA。
 
+## 版本状态
+
+当前开发版本为 **v3.4.0-beta.1**。核心工作流已经进入 Beta 测试，视觉参考包、
+跨宿主生成一致性及部分内部 Schema 和接口仍会继续调整。现有自然语言用法将
+尽量保持兼容，但不保证开发阶段的内部 JSON 和中间文件格式保持不变。
+
+需要继续使用原有工作流的用户，可以选择
+[v3.3.1 稳定版](https://github.com/deathcats4/scholar-ppt-cn/releases/tag/v3.3.1)。
+该版本及其 Git 标签会继续保留，不会被 v3.4 覆盖。
+
 ## 定位
 
 本仓库提供：
@@ -65,6 +75,10 @@ python scripts/validate_project.py path/to/project.json
 python scripts/export_planning.py path/to/project.json path/to/planning.md
 python scripts/qa_pptx.py path/to/deck.pptx --project path/to/project.json --report path/to/qa-report.json --update-project
 python scripts/export_qa_note.py path/to/qa-report.json path/to/qa-note.md
+python scripts/validate_visual_references.py --pack assets/visual-reference-packs/blue-academic/pack.json
+python scripts/validate_visual_references.py --plan assets/visual-reference-packs/blue-academic/generation/generation-plan.json
+python scripts/validate_visual_references.py --family-plan assets/visual-reference-packs/blue-academic/generation/family-expansion-plan.json
+python scripts/export_visual_family_prompts.py assets/visual-reference-packs/blue-academic/generation/family-expansion-plan.json assets/visual-reference-packs/blue-academic/generation/FAMILY_EXPANSION_PROMPTS.md
 python scripts/lint_skill.py .
 python scripts/package_skill.py --version dev
 python -m unittest discover -s tests -v
@@ -95,7 +109,21 @@ python -m unittest discover -s tests -v
 新版工作流不再把它作为自动默认模板。三套原创中性模板将在后续阶段制作和
 视觉验证。
 
+## 视觉参考包
+
+v3.4 引入与可编辑模板互补的视觉参考包。预生成的高质量页面
+图片只用于学习层级、留白、图文关系和页面节奏；最终 PPTX 仍使用真实内容和
+可编辑对象重建，不会把整页参考图作为背景。
+
+`assets/visual-reference-packs/blue-academic/` 当前为 `active`，包含 31 张
+经过人工筛选的参考图，覆盖封面、研究空白、研究问题、方法设计、单主图结果、
+比较、多面板、机制、讨论与展望、结论十类核心页面角色。每类以 3 张作为最低
+探索数量，优秀且不重复的候选可以更多。运行时先读取元数据，再只打开匹配的
+少量图片；示例图表、数字和结论不得进入最终 PPTX。该参考包已经用于真实论文
+的本地端到端验证，后续仍会继续扩展页面角色、内容几何和跨学科覆盖。
+
 ## 开发状态
 
-当前为 v3.4 本地重构阶段。根目录 `AGENTS.md` 记录已经确认的产品原则、
-开发约束和本地迭代方式。
+当前为 v3.4.0-beta.1 阶段。根目录 `AGENTS.md` 记录已经确认的产品原则、
+开发约束和本地迭代方式。Beta 完成真实材料回归、跨平台验证和外部审查后，
+再进入 v3.4.0 稳定版本。

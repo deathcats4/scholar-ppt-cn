@@ -35,12 +35,19 @@ Use one adaptive workflow:
 1. Read the request and register source files.
 2. Probe available capabilities when local tools exist.
 3. Create or update a versioned `project.json`.
-4. Select or extract Template DNA.
-5. Plan the narrative, slides, evidence, and layouts.
-6. Ask whether to use representative samples when they would reduce visual
-   uncertainty; add a family blueprint or samples according to that decision.
-7. Create the requested artifact with the available host tools.
-8. Run deterministic QA, render/inspect when possible, revise, and deliver.
+4. Determine the canvas and authoritative user-template constraints.
+5. Plan the narrative, slide communication tasks, evidence coverage, and
+   source-asset geometry before choosing reference pages or page skeletons.
+6. Select or extract Template DNA, then define deck-wide visual-family
+   behaviors and cross-slide rhythm.
+7. Retrieve approved visual references only as late aesthetic anchors. Ask
+   whether to use representative samples when they would materially reduce
+   visual uncertainty.
+8. Compose each slide from its current message and evidence. Treat family,
+   variant, archetype, and reference-image choices as guidance unless strict
+   template adherence was explicitly requested.
+9. Create the requested artifact with the available host tools.
+10. Run deterministic QA, render/inspect when possible, revise, and deliver.
 
 Do not define Lite, Standard, or Full modes. Record each workflow step as
 completed, planned, skipped, or not applicable, with a short reason.
@@ -96,7 +103,8 @@ Never claim an unavailable check was completed.
 ## Templates and canvas
 
 Prefer a user-provided template and preserve its native canvas dimensions. When
-no user template exists, use a neutral built-in preset and default to 16:9.
+no user template exists, use an approved visual reference pack or neutral
+design tokens and default to 16:9.
 
 When visual identity materially affects the outcome, do not silently choose
 between several plausible template directions. Ask whether the user wants to
@@ -108,6 +116,23 @@ automatic default. It is a legacy development asset pending replacement.
 
 Treat Template DNA as visual identity, not fixed geometry. Read
 `references/template_dna_rules.md` and `references/cjk_typography_rules.md`.
+
+When an approved visual reference pack is available, read
+`references/visual_reference_pack_rules.md`. Filter by JSON metadata before
+opening only the best 1–3 images. A draft pack is never a runtime default.
+
+Keep this authority order:
+
+- planning decides what each slide must communicate and which evidence it uses;
+- the visual family decides identity, hierarchy, annotation behavior, density,
+  and cross-slide rhythm;
+- reference images indicate the aesthetic target and useful composition
+  behaviors;
+- the builder decides actual geometry from current title length, evidence
+  geometry, density, and neighboring-slide rhythm.
+
+Do not select a reference image first and then reshape the slide task to match
+it. Do not turn an approved reference page into a fixed editable stencil.
 
 Use role-based typography:
 
@@ -128,8 +153,10 @@ Before planning, index evidence proportionally to the available material. Read:
 - `references/evidence_asset_rules.md`.
 
 Build slide records using `references/production_planning_table_rules.md`.
-Select layouts from `references/fallback_layout_archetype_library.md` when no
-approved visual system exists.
+Record layout intent without locking exact geometry. Use
+`references/fallback_layout_archetype_library.md` as an internal vocabulary of
+composition possibilities when useful, not as a mandatory page-template
+catalog.
 
 Keep evidence figures readable and faithful. Preserve axes, legends, scale bars,
 panel labels, table headers, units, and essential notes. Request a better source
@@ -141,7 +168,9 @@ Treat image generation as a provider-neutral, optional design tool.
 
 Create a mockup family/variant blueprint only when reusable visual planning adds
 value, such as a long deck, repeated evidence types, or explicit sample-first
-work. Skip it for simple or local revisions when it would add no value.
+work. Describe visual behavior and variation strategy rather than assigning a
+fixed skeleton to every slide. Skip it for simple or local revisions when it
+would add no value.
 
 For a new deck with no approved template or visual system, ask whether the user
 wants 3–5 representative samples before full production. Recommend samples when
@@ -159,7 +188,13 @@ After the user approves samples, read:
 - `references/locked_visual_system_rules.md`;
 - `references/mockup_derived_archetype_rules.md`.
 
+Approval locks the visual identity and quality bar, not the exact geometry of
+the sample pages. Recompose later slides when their real evidence, title length,
+or density differs from the sample.
+
 Do not paste a full-slide mockup image as the final editable slide background.
+The same rule applies to bundled visual reference images: learn from them, then
+rebuild with current-project content and editable objects.
 
 ## Editable PPTX
 
@@ -173,6 +208,10 @@ Use the host's available presentation tooling. Follow:
 Keep titles, body text, captions, source notes, page numbers, simple shapes,
 lines, arrows, and callouts editable. Insert source figures as image objects
 unless the user requests a redraw.
+
+Keep epistemic guardrails internal. Final slide copy should state what the
+evidence supports, limits, or leaves unverified instead of telling the audience
+what not to infer or how the builder must avoid misreading it.
 
 Write outputs under a project-specific directory:
 

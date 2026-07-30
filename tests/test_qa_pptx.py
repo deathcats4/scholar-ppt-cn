@@ -76,6 +76,23 @@ class PptxQaTests(unittest.TestCase):
             codes = {item["code"] for item in report["issues"]}
             self.assertIn("pptx.internal_term", codes)
 
+    def test_defensive_meta_language_is_review_warning(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "defensive-meta-language.pptx"
+            make_pptx(path, text="注意：这是间接时间约束")
+            report = inspect_pptx(path)
+            codes = {item["code"] for item in report["issues"]}
+            self.assertIn("pptx.defensive_meta_language", codes)
+            self.assertEqual(0, report["summary"]["error"], report)
+
+    def test_direct_academic_limitation_is_not_meta_language(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "academic-limitation.pptx"
+            make_pptx(path, text="深部靶区尚未经过钻探验证")
+            report = inspect_pptx(path)
+            codes = {item["code"] for item in report["issues"]}
+            self.assertNotIn("pptx.defensive_meta_language", codes)
+
     def test_entirely_outside_shape_is_error(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "outside.pptx"

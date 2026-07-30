@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../schemas/visual-reference-item.schema.json",
+  "schema_version": "1.0.0",
+  "id": "research-gap-04",
+  "file": "../images/research-gap-04.png",
+  "role": "research-gap",
+  "asset_geometry": "comparison",
+  "density": "medium",
+  "title_mode": "takeaway",
+  "example_content": true,
+  "editable_rebuild": true,
+  "learn": [
+    "证据图与解释性问题清单的左右对照",
+    "短引文用于强化研究矛盾",
+    "红色警示与蓝色主体系的克制配合"
+  ],
+  "do_not_copy": [
+    "疗效曲线、患者问题和临床结论",
+    "引文内容及引号装饰",
+    "红色警示图标的精确样式"
+  ]
+}

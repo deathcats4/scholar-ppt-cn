@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../schemas/visual-reference-item.schema.json",
+  "schema_version": "1.0.0",
+  "id": "mechanism-03",
+  "file": "../images/mechanism-03.png",
+  "role": "mechanism",
+  "asset_geometry": "mixed",
+  "density": "high",
+  "title_mode": "takeaway",
+  "example_content": true,
+  "editable_rebuild": true,
+  "learn": [
+    "把直接证据、过程、结构响应和性能结果串成机制链",
+    "允许显微图、示意图和曲线承担不同证据角色",
+    "用反馈箭头表达结果对过程的反向作用"
+  ],
+  "do_not_copy": [
+    "示例电化学界面与容量衰减结论",
+    "示例显微图、曲线和数据",
+    "示例四栏宽度与反馈箭头路径"
+  ]
+}
