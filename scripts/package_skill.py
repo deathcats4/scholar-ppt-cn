@@ -17,6 +17,7 @@ from scripts.lint_skill import lint_skill
 PACKAGE_ROOTS = (
     "SKILL.md",
     "LICENSE",
+    "requirements-runtime.txt",
     "agents",
     "assets",
     "references",

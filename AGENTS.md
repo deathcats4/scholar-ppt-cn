@@ -5,7 +5,7 @@
 Build a host-agnostic Chinese academic presentation workflow Skill for capable
 AI agents. The repository may use host-provided file, presentation, rendering,
 vision, or image-generation tools, but the core workflow must not depend on
-Codex, ChatGPT, or any named image model.
+any named Agent, LLM product, host, or image model.
 
 The project is a workflow Skill with deterministic planning validation, PPTX
 static QA, packaging, and CI support. It does not promise a bundled,

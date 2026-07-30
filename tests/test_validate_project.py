@@ -162,6 +162,159 @@ class ProjectValidationTests(unittest.TestCase):
         }
         self.assertIn("reference.slide_reverse", asset_codes)
 
+    def test_render_assets_must_belong_to_the_slide_evidence_set(self) -> None:
+        data = load_json(FIXTURES / "project-valid.json")
+        data["assets"].append(
+            {
+                "id": "asset-extra",
+                "type": "figure",
+                "path": "sources/extra.png",
+                "source_ref": {},
+                "geometry": "wide",
+                "summary": "Extra figure",
+                "used_on_slides": [],
+            }
+        )
+        data["slides"][1]["render"] = {
+            "type": "figure",
+            "asset_ids": ["asset-extra"],
+        }
+        codes = {
+            issue.code
+            for issue in validate_project(data)
+            if issue.severity == "error"
+        }
+        self.assertIn("reference.render_asset", codes)
+
+    def test_comparison_render_requires_two_explicit_assets(self) -> None:
+        data = load_json(FIXTURES / "project-valid.json")
+        data["slides"][1]["render"] = {
+            "type": "comparison",
+            "asset_ids": ["asset-fig-1"],
+        }
+        codes = {
+            issue.code
+            for issue in validate_project(data)
+            if issue.severity == "error"
+        }
+        self.assertIn("slide.render_asset_count", codes)
+
+    def test_render_asset_count_uses_source_assets_when_override_is_absent(self) -> None:
+        data = load_json(FIXTURES / "project-valid.json")
+        data["slides"][1]["render"] = {"type": "comparison"}
+        codes = {
+            issue.code
+            for issue in validate_project(data)
+            if issue.severity == "error"
+        }
+        self.assertIn("slide.render_asset_count", codes)
+
+    def test_figure_render_rejects_multiple_effective_assets(self) -> None:
+        data = load_json(FIXTURES / "project-valid.json")
+        data["assets"].append(
+            {
+                "id": "asset-extra",
+                "type": "figure",
+                "path": "sources/extra.png",
+                "source_ref": {},
+                "geometry": "wide",
+                "summary": "Extra figure",
+                "used_on_slides": ["slide-2"],
+            }
+        )
+        data["slides"][1]["source_asset_ids"].append("asset-extra")
+        data["slides"][1]["render"] = {"type": "figure"}
+        codes = {
+            issue.code
+            for issue in validate_project(data)
+            if issue.severity == "error"
+        }
+        self.assertIn("slide.render_asset_count", codes)
+
+    def test_ignored_assets_require_reason_and_cannot_be_selected(self) -> None:
+        data = load_json(FIXTURES / "project-valid.json")
+        data["slides"][1]["render"] = {
+            "type": "figure",
+            "asset_ids": ["asset-fig-1"],
+            "ignored_asset_ids": ["asset-fig-1"],
+        }
+        codes = {
+            issue.code
+            for issue in validate_project(data)
+            if issue.severity == "error"
+        }
+        self.assertIn("reference.ignored_asset", codes)
+        self.assertIn("slide.ignore_reason", codes)
+
+    def test_multi_panel_rejects_more_than_four_effective_assets(self) -> None:
+        data = load_json(FIXTURES / "project-valid.json")
+        for number in range(2, 6):
+            asset_id = f"asset-{number}"
+            data["assets"].append(
+                {
+                    "id": asset_id,
+                    "type": "figure",
+                    "path": f"sources/{asset_id}.png",
+                    "source_ref": {},
+                    "geometry": "wide",
+                    "summary": asset_id,
+                    "used_on_slides": ["slide-2"],
+                }
+            )
+            data["slides"][1]["source_asset_ids"].append(asset_id)
+        data["slides"][1]["render"] = {"type": "multi-panel"}
+        codes = {
+            issue.code
+            for issue in validate_project(data)
+            if issue.severity == "error"
+        }
+        self.assertIn("slide.render_asset_count", codes)
+
+    def test_auto_render_validates_effective_multi_panel_asset_count(self) -> None:
+        data = load_json(FIXTURES / "project-valid.json")
+        for number in range(2, 6):
+            asset_id = f"asset-auto-{number}"
+            data["assets"].append(
+                {
+                    "id": asset_id,
+                    "type": "figure",
+                    "path": f"sources/{asset_id}.png",
+                    "source_ref": {},
+                    "geometry": "wide",
+                    "summary": asset_id,
+                    "used_on_slides": ["slide-2"],
+                }
+            )
+            data["slides"][1]["source_asset_ids"].append(asset_id)
+        data["slides"][1]["render"] = {"type": "auto"}
+        codes = {
+            issue.code
+            for issue in validate_project(data)
+            if issue.severity == "error"
+        }
+        self.assertIn("slide.render_asset_count", codes)
+
+    def test_fixed_renderers_reject_content_beyond_layout_capacity(self) -> None:
+        item = {"title": "要点", "body": "说明", "asset_id": None}
+        cases = (
+            (0, {"type": "cover", "items": [dict(item) for _ in range(5)]}),
+            (1, {"type": "bullets", "items": [dict(item) for _ in range(5)]}),
+            (1, {"type": "statement", "items": [dict(item) for _ in range(5)]}),
+            (1, {"type": "figure", "body": [f"说明 {i}" for i in range(5)]}),
+            (1, {"type": "process", "body": [f"步骤 {i}" for i in range(6)]}),
+            (1, {"type": "conclusion", "items": [dict(item) for _ in range(5)]}),
+        )
+        for slide_index, render in cases:
+            with self.subTest(render_type=render["type"]):
+                data = load_json(FIXTURES / "project-valid.json")
+                data["slides"][slide_index]["render"] = render
+                codes = {
+                    issue.code
+                    for issue in validate_project(data)
+                    if issue.severity == "error"
+                }
+                self.assertIn("slide.render_content_count", codes)
+
     def test_slide_numbers_must_be_contiguous(self) -> None:
         data = load_json(FIXTURES / "project-valid.json")
         data["slides"][1]["number"] = 3

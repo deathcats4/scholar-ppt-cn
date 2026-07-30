@@ -81,8 +81,8 @@ inconsistent.
 
 ## Capability adaptation
 
-Do not bind the workflow to Codex, ChatGPT, a named image model, PowerPoint, or
-LibreOffice.
+Do not bind the workflow to a named Agent, LLM product, image model,
+presentation application, or rendering stack.
 
 Use `references/capability_rules.md`. When local Python is available, probe with:
 
@@ -198,12 +198,24 @@ rebuild with current-project content and editable objects.
 
 ## Editable PPTX
 
-Use the host's available presentation tooling. Follow:
+Use the host's available presentation tooling when it can reliably create the
+requested editable deck. Follow:
 
 - `references/editable_reconstruction_rules.md`;
 - `references/layout_repetition_control.md`;
 - `references/visible_text_filter_rules.md`;
 - `references/evidence_asset_rules.md`.
+
+When the current execution path would otherwise require a large one-off
+builder, repeatedly time out, or fail to produce an editable PPTX despite
+having Python, read
+`references/fallback_pptx_runtime.md` and use the bundled baseline runtime. Keep
+`project.json` authoritative; add compact per-slide `render` intent only when
+the default inference is insufficient.
+
+```text
+python scripts/build_deck.py <project.json> --base-dir <project-root> --report <build-report.json> --update-project
+```
 
 Keep titles, body text, captions, source notes, page numbers, simple shapes,
 lines, arrows, and callouts editable. Insert source figures as image objects

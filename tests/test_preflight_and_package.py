@@ -41,6 +41,13 @@ class PreflightAndPackageTests(unittest.TestCase):
             with zipfile.ZipFile(first) as archive:
                 names = set(archive.namelist())
             prefix = "scholar-ppt-cn/assets/visual-reference-packs/blue-academic/"
+            self.assertIn("scholar-ppt-cn/requirements-runtime.txt", names)
+            self.assertIn("scholar-ppt-cn/scripts/build_deck.py", names)
+            self.assertIn("scholar-ppt-cn/scripts/pptx_runtime.py", names)
+            self.assertIn(
+                "scholar-ppt-cn/references/fallback_pptx_runtime.md",
+                names,
+            )
             self.assertIn(f"{prefix}pack.json", names)
             self.assertIn(f"{prefix}images/cover-01.png", names)
             self.assertNotIn(f"{prefix}contact-sheet.png", names)
