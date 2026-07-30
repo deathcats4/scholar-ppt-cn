@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import copy
+import json
+import subprocess
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -34,6 +39,153 @@ class ProjectValidationTests(unittest.TestCase):
         issues = validate_project(data)
         codes = {issue.code for issue in issues if issue.severity == "error"}
         self.assertIn("schema.additional_property", codes)
+
+    def test_wrong_nested_types_return_issues_instead_of_crashing(self) -> None:
+        base = load_json(FIXTURES / "project-valid.json")
+        mutations = {
+            "null asset slide list": lambda data: data["assets"][0].__setitem__(
+                "used_on_slides", None
+            ),
+            "array capability availability": lambda data: data["capabilities"][
+                "filesystem"
+            ].__setitem__("available", []),
+            "array workflow status": lambda data: data["workflow"]["steps"][
+                "planning"
+            ].__setitem__("status", []),
+            "array template source": lambda data: data["template"].__setitem__(
+                "source", []
+            ),
+            "object slide asset id": lambda data: data["slides"][1].__setitem__(
+                "source_asset_ids", [{}]
+            ),
+            "array layout family id": lambda data: data["slides"][1]["layout"].__setitem__(
+                "family_id", []
+            ),
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label):
+                data = copy.deepcopy(base)
+                mutate(data)
+                issues = validate_project(data)
+                self.assertTrue(
+                    any(issue.severity == "error" for issue in issues),
+                    issues,
+                )
+
+    def test_cli_returns_json_report_for_wrong_nested_type(self) -> None:
+        data = load_json(FIXTURES / "project-valid.json")
+        data["assets"][0]["used_on_slides"] = None
+        with tempfile.TemporaryDirectory() as directory:
+            project_path = Path(directory) / "project.json"
+            project_path.write_text(
+                json.dumps(data, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "scripts" / "validate_project.py"),
+                    str(project_path),
+                ],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                check=False,
+            )
+        self.assertEqual(1, result.returncode)
+        report = json.loads(result.stdout)
+        self.assertEqual("failed", report["status"])
+        self.assertNotIn("Traceback", result.stderr)
+
+    def test_family_variant_and_slide_mappings_are_consistent(self) -> None:
+        data = load_json(FIXTURES / "project-valid.json")
+        data["visual_system"]["families"] = [
+            {"id": "family-a", "name": "A", "slide_ids": ["slide-2"]},
+            {"id": "family-b", "name": "B", "slide_ids": []},
+        ]
+        data["visual_system"]["variants"] = [
+            {
+                "id": "variant-b",
+                "family_id": "family-b",
+                "name": "B",
+                "slide_ids": ["slide-2"],
+            }
+        ]
+        data["slides"][1]["layout"]["family_id"] = "family-a"
+        data["slides"][1]["layout"]["variant_id"] = "variant-b"
+        codes = {
+            issue.code
+            for issue in validate_project(data)
+            if issue.severity == "error"
+        }
+        self.assertIn("reference.variant_family", codes)
+        self.assertIn("reference.variant_family_membership", codes)
+
+    def test_family_and_variant_slide_ids_must_reference_real_slides(self) -> None:
+        data = load_json(FIXTURES / "project-valid.json")
+        data["visual_system"]["families"] = [
+            {"id": "family-a", "name": "A", "slide_ids": ["slide-999"]}
+        ]
+        data["visual_system"]["variants"] = [
+            {
+                "id": "variant-a",
+                "family_id": "family-a",
+                "name": "A",
+                "slide_ids": ["slide-998"],
+            }
+        ]
+        issues = validate_project(data)
+        unknown_slide_errors = [
+            issue
+            for issue in issues
+            if issue.severity == "error" and issue.code == "reference.slide"
+        ]
+        self.assertGreaterEqual(len(unknown_slide_errors), 2, issues)
+
+    def test_asset_slide_references_are_bidirectional(self) -> None:
+        slide_only = load_json(FIXTURES / "project-valid.json")
+        slide_only["assets"][0]["used_on_slides"] = []
+        slide_codes = {
+            issue.code
+            for issue in validate_project(slide_only)
+            if issue.severity == "error"
+        }
+        self.assertIn("reference.asset_reverse", slide_codes)
+
+        asset_only = load_json(FIXTURES / "project-valid.json")
+        asset_only["slides"][1]["source_asset_ids"] = []
+        asset_codes = {
+            issue.code
+            for issue in validate_project(asset_only)
+            if issue.severity == "error"
+        }
+        self.assertIn("reference.slide_reverse", asset_codes)
+
+    def test_slide_numbers_must_be_contiguous(self) -> None:
+        data = load_json(FIXTURES / "project-valid.json")
+        data["slides"][1]["number"] = 3
+        codes = {
+            issue.code
+            for issue in validate_project(data)
+            if issue.severity == "error"
+        }
+        self.assertIn("slide.number_sequence", codes)
+
+    def test_completed_workflow_steps_require_matching_state(self) -> None:
+        data = load_json(FIXTURES / "project-valid.json")
+        data["workflow"]["steps"]["editable-pptx"]["status"] = "completed"
+        data["workflow"]["steps"]["static-qa"]["status"] = "completed"
+        data["artifacts"]["pptx"] = None
+        data["artifacts"]["qa_report"] = None
+        data["qa"]["status"] = "not-run"
+        codes = {
+            issue.code
+            for issue in validate_project(data)
+            if issue.severity == "error"
+        }
+        self.assertIn("workflow.artifact", codes)
+        self.assertIn("workflow.qa_status", codes)
 
     def test_markdown_is_derived_from_json(self) -> None:
         markdown = render_markdown(load_json(FIXTURES / "project-valid.json"))

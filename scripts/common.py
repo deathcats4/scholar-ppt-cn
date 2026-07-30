@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Iterable
@@ -46,11 +48,26 @@ def make_report(tool: str, issues: list[Issue], **details: Any) -> dict[str, Any
 def write_json(path: str | Path, value: Any) -> None:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    with target.open("w", encoding="utf-8", newline="\n") as handle:
-        json.dump(value, handle, ensure_ascii=False, indent=2)
-        handle.write("\n")
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{target.name}.",
+        suffix=".tmp",
+        dir=target.parent,
+    )
+    temporary_path = Path(temporary_name)
+    try:
+        stream = os.fdopen(descriptor, "w", encoding="utf-8", newline="\n")
+        descriptor = -1
+        with stream:
+            json.dump(value, stream, ensure_ascii=False, indent=2)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary_path, target)
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
+        temporary_path.unlink(missing_ok=True)
 
 
 def print_report(report: dict[str, Any]) -> None:
     print(json.dumps(report, ensure_ascii=False, indent=2))
-

@@ -4,12 +4,14 @@ import json
 import struct
 import tempfile
 import unittest
+import zlib
 from pathlib import Path
 
 from scripts.common import load_json
 from scripts.export_visual_generation_prompts import render_markdown
 from scripts.export_visual_family_prompts import render_family_markdown
 from scripts.validate_visual_references import (
+    _validate_png,
     validate_family_plan,
     validate_pack,
     validate_plan,
@@ -25,6 +27,23 @@ PLAN = GENERATION_DIR / "generation-plan.json"
 PROMPTS = GENERATION_DIR / "GENERATION_PROMPTS.md"
 FAMILY_PLAN = GENERATION_DIR / "family-expansion-plan.json"
 FAMILY_PROMPTS = GENERATION_DIR / "FAMILY_EXPANSION_PROMPTS.md"
+
+
+def png_chunk(chunk_type: bytes, data: bytes) -> bytes:
+    crc = zlib.crc32(chunk_type)
+    crc = zlib.crc32(data, crc) & 0xFFFFFFFF
+    return struct.pack(">I", len(data)) + chunk_type + data + struct.pack(">I", crc)
+
+
+def blank_png(width: int = 1600, height: int = 900) -> bytes:
+    row = b"\x00" + b"\x00" * ((width + 7) // 8)
+    ihdr = struct.pack(">IIBBBBB", width, height, 1, 0, 0, 0, 0)
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + png_chunk(b"IHDR", ihdr)
+        + png_chunk(b"IDAT", zlib.compress(row * height))
+        + png_chunk(b"IEND", b"")
+    )
 
 
 class VisualReferenceTests(unittest.TestCase):
@@ -90,12 +109,7 @@ class VisualReferenceTests(unittest.TestCase):
             image_dir.mkdir()
             metadata_dir.mkdir()
             image_path = image_dir / "dominant-result-01.png"
-            image_path.write_bytes(
-                b"\x89PNG\r\n\x1a\n"
-                + struct.pack(">I", 13)
-                + b"IHDR"
-                + struct.pack(">II", 1600, 900)
-            )
+            image_path.write_bytes(blank_png())
             metadata = {
                 "$schema": "visual-reference-item.schema.json",
                 "schema_version": "1.0.0",
@@ -139,12 +153,7 @@ class VisualReferenceTests(unittest.TestCase):
             image_dir.mkdir()
             metadata_dir.mkdir()
             image_path = image_dir / "dominant-result-01.png"
-            image_path.write_bytes(
-                b"\x89PNG\r\n\x1a\n"
-                + struct.pack(">I", 13)
-                + b"IHDR"
-                + struct.pack(">II", 1600, 900)
-            )
+            image_path.write_bytes(blank_png())
             metadata = {
                 "$schema": "visual-reference-item.schema.json",
                 "schema_version": "1.0.0",
@@ -180,6 +189,22 @@ class VisualReferenceTests(unittest.TestCase):
             report = validate_pack(target)
         codes = {issue["code"] for issue in report["issues"]}
         self.assertIn("visual_pack.active_incomplete", codes)
+
+    def test_png_validation_rejects_truncated_file(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "truncated.png"
+            target.write_bytes(blank_png()[:-6])
+            with self.assertRaisesRegex(ValueError, "chunk|IEND"):
+                _validate_png(target)
+
+    def test_png_validation_rejects_crc_corruption(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "bad-crc.png"
+            payload = bytearray(blank_png())
+            payload[-1] ^= 0x01
+            target.write_bytes(payload)
+            with self.assertRaisesRegex(ValueError, "CRC"):
+                _validate_png(target)
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 from scripts.package_skill import build_package, re_safe_version
@@ -37,6 +38,15 @@ class PreflightAndPackageTests(unittest.TestCase):
             second_result = build_package(ROOT, second, "test")
             self.assertEqual(first_result["sha256"], second_result["sha256"])
             self.assertFalse(first_result["legacy_template_included"])
+            with zipfile.ZipFile(first) as archive:
+                names = set(archive.namelist())
+            prefix = "scholar-ppt-cn/assets/visual-reference-packs/blue-academic/"
+            self.assertIn(f"{prefix}pack.json", names)
+            self.assertIn(f"{prefix}images/cover-01.png", names)
+            self.assertNotIn(f"{prefix}contact-sheet.png", names)
+            self.assertFalse(
+                any(name.startswith(f"{prefix}generation/") for name in names)
+            )
 
 
 if __name__ == "__main__":

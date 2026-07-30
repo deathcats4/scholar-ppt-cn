@@ -13,11 +13,14 @@ CONTENT_TYPES = """<?xml version="1.0" encoding="UTF-8"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
   <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
   <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+  <Override PartName="/ppt/slides/slide2.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
 </Types>
 """
 ROOT_RELS = """<?xml version="1.0" encoding="UTF-8"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="officeDocument" Target="ppt/presentation.xml"/>
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/>
 </Relationships>
 """
 PRESENTATION = """<?xml version="1.0" encoding="UTF-8"?>
@@ -29,7 +32,7 @@ PRESENTATION = """<?xml version="1.0" encoding="UTF-8"?>
 """
 PRESENTATION_RELS = """<?xml version="1.0" encoding="UTF-8"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="slide" Target="slides/slide1.xml"/>
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
 </Relationships>
 """
 
@@ -57,6 +60,41 @@ def make_pptx(path: Path, text: str = "Academic presentation", x: int = 0) -> No
         archive.writestr("ppt/presentation.xml", PRESENTATION)
         archive.writestr("ppt/_rels/presentation.xml.rels", PRESENTATION_RELS)
         archive.writestr("ppt/slides/slide1.xml", slide_xml(text, x))
+
+
+def make_two_slide_pptx(
+    path: Path,
+    *,
+    first_target: str = "slides/slide1.xml",
+    second_target: str = "slides/slide2.xml",
+    second_text: str = "Second slide",
+    include_orphan: bool = False,
+) -> None:
+    presentation = """<?xml version="1.0" encoding="UTF-8"?>
+<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+ xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <p:sldIdLst>
+    <p:sldId id="256" r:id="rId1"/>
+    <p:sldId id="257" r:id="rId2"/>
+  </p:sldIdLst>
+  <p:sldSz cx="12192000" cy="6858000"/>
+</p:presentation>
+"""
+    relationships = f"""<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="{first_target}"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="{second_target}"/>
+</Relationships>
+"""
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("[Content_Types].xml", CONTENT_TYPES)
+        archive.writestr("_rels/.rels", ROOT_RELS)
+        archive.writestr("ppt/presentation.xml", presentation)
+        archive.writestr("ppt/_rels/presentation.xml.rels", relationships)
+        archive.writestr("ppt/slides/slide1.xml", slide_xml("First slide"))
+        archive.writestr("ppt/slides/slide2.xml", slide_xml(second_text))
+        if include_orphan:
+            archive.writestr("ppt/slides/slide3.xml", slide_xml("Orphan slide"))
 
 
 class PptxQaTests(unittest.TestCase):
@@ -120,6 +158,81 @@ class PptxQaTests(unittest.TestCase):
             report = inspect_pptx(path)
             codes = {item["code"] for item in report["issues"]}
             self.assertIn("pptx.embedded_content", codes)
+
+    def test_presentation_relationships_define_real_slide_order(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "reordered.pptx"
+            make_two_slide_pptx(
+                path,
+                first_target="slides/slide2.xml",
+                second_target="slides/slide1.xml",
+                second_text="Template DNA",
+            )
+            report = inspect_pptx(path)
+            internal_terms = [
+                issue
+                for issue in report["issues"]
+                if issue["code"] == "pptx.internal_term"
+            ]
+            self.assertEqual("slide:1", internal_terms[0]["path"], report)
+
+    def test_orphan_slide_part_is_not_counted(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "orphan.pptx"
+            make_pptx(path)
+            with zipfile.ZipFile(path, "a") as archive:
+                archive.writestr("ppt/slides/slide2.xml", slide_xml("Orphan slide"))
+            report = inspect_pptx(path)
+            codes = {item["code"] for item in report["issues"]}
+            self.assertIn("pptx.orphan_slide_part", codes)
+            self.assertEqual(1, report["details"]["slide_count"])
+
+    def test_malformed_presentation_xml_returns_structured_error(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "bad-presentation.pptx"
+            with zipfile.ZipFile(path, "w") as archive:
+                archive.writestr("[Content_Types].xml", CONTENT_TYPES)
+                archive.writestr("_rels/.rels", ROOT_RELS)
+                archive.writestr("ppt/presentation.xml", "<p:presentation")
+            report = inspect_pptx(path)
+            codes = {item["code"] for item in report["issues"]}
+            self.assertIn("pptx.presentation_xml", codes)
+            self.assertEqual("failed", report["status"])
+
+    def test_malformed_slide_relationships_return_structured_error(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "bad-slide-rels.pptx"
+            make_pptx(path)
+            with zipfile.ZipFile(path, "a") as archive:
+                archive.writestr(
+                    "ppt/slides/_rels/slide1.xml.rels",
+                    "<Relationships",
+                )
+            report = inspect_pptx(path)
+            codes = {item["code"] for item in report["issues"]}
+            self.assertIn("pptx.relationship_xml", codes)
+            self.assertEqual("failed", report["status"])
+
+    def test_malformed_presentation_relationships_return_structured_error(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "bad-presentation-rels.pptx"
+            with zipfile.ZipFile(path, "w") as archive:
+                archive.writestr("[Content_Types].xml", CONTENT_TYPES)
+                archive.writestr("_rels/.rels", ROOT_RELS)
+                archive.writestr("ppt/presentation.xml", PRESENTATION)
+                archive.writestr(
+                    "ppt/_rels/presentation.xml.rels",
+                    "<Relationships",
+                )
+                archive.writestr(
+                    "ppt/slides/slide1.xml",
+                    slide_xml("Academic presentation"),
+                )
+            report = inspect_pptx(path)
+            codes = {item["code"] for item in report["issues"]}
+            self.assertIn("pptx.relationship_xml", codes)
+            self.assertIn("pptx.slide_relationship", codes)
+            self.assertEqual("failed", report["status"])
 
     def test_qa_report_updates_project_state(self) -> None:
         fixture = (

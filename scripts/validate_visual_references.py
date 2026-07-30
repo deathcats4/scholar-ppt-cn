@@ -4,6 +4,7 @@ import argparse
 import json
 import struct
 import sys
+import zlib
 from pathlib import Path
 from typing import Any
 
@@ -33,14 +34,152 @@ CORE_REFERENCE_ROLES = {
     "discussion-outlook",
     "conclusion",
 }
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+PNG_CHANNELS = {
+    0: 1,
+    2: 3,
+    3: 1,
+    4: 2,
+    6: 4,
+}
+PNG_BIT_DEPTHS = {
+    0: {1, 2, 4, 8, 16},
+    2: {8, 16},
+    3: {1, 2, 4, 8},
+    4: {8, 16},
+    6: {8, 16},
+}
+ADAM7_PASSES = (
+    (0, 0, 8, 8),
+    (4, 0, 8, 8),
+    (0, 4, 4, 8),
+    (2, 0, 4, 4),
+    (0, 2, 2, 4),
+    (1, 0, 2, 2),
+    (0, 1, 1, 2),
+)
+MAX_DECODED_PNG_BYTES = 256 * 1024 * 1024
 
 
-def _png_size(path: Path) -> tuple[int, int]:
-    with path.open("rb") as handle:
-        header = handle.read(24)
-    if len(header) < 24 or header[:8] != b"\x89PNG\r\n\x1a\n":
+def _pass_size(size: int, start: int, step: int) -> int:
+    if size <= start:
+        return 0
+    return (size - start + step - 1) // step
+
+
+def _png_scanlines(
+    width: int,
+    height: int,
+    channels: int,
+    bit_depth: int,
+    interlace: int,
+) -> list[tuple[int, int]]:
+    passes = ((0, 0, 1, 1),) if interlace == 0 else ADAM7_PASSES
+    result: list[tuple[int, int]] = []
+    for start_x, start_y, step_x, step_y in passes:
+        pass_width = _pass_size(width, start_x, step_x)
+        pass_height = _pass_size(height, start_y, step_y)
+        if not pass_width or not pass_height:
+            continue
+        row_bytes = (pass_width * channels * bit_depth + 7) // 8
+        result.append((pass_height, row_bytes))
+    return result
+
+
+def _validate_png(path: Path) -> tuple[int, int]:
+    payload = path.read_bytes()
+    if len(payload) < 8 or payload[:8] != PNG_SIGNATURE:
         raise ValueError("File is not a valid PNG")
-    return struct.unpack(">II", header[16:24])
+
+    offset = 8
+    chunk_index = 0
+    ihdr: bytes | None = None
+    idat: list[bytes] = []
+    has_palette = False
+    has_iend = False
+    while offset < len(payload):
+        if len(payload) - offset < 12:
+            raise ValueError("PNG is truncated before a complete chunk")
+        length = struct.unpack(">I", payload[offset : offset + 4])[0]
+        chunk_type = payload[offset + 4 : offset + 8]
+        chunk_end = offset + 12 + length
+        if chunk_end > len(payload):
+            raise ValueError("PNG chunk extends beyond the end of the file")
+        chunk_data = payload[offset + 8 : offset + 8 + length]
+        expected_crc = struct.unpack(
+            ">I", payload[offset + 8 + length : chunk_end]
+        )[0]
+        actual_crc = zlib.crc32(chunk_type)
+        actual_crc = zlib.crc32(chunk_data, actual_crc) & 0xFFFFFFFF
+        if actual_crc != expected_crc:
+            name = chunk_type.decode("ascii", errors="replace")
+            raise ValueError(f"PNG chunk CRC mismatch: {name}")
+
+        if chunk_index == 0 and chunk_type != b"IHDR":
+            raise ValueError("PNG must begin with an IHDR chunk")
+        if chunk_type == b"IHDR":
+            if ihdr is not None or length != 13:
+                raise ValueError("PNG contains an invalid IHDR chunk")
+            ihdr = chunk_data
+        elif chunk_type == b"PLTE":
+            has_palette = True
+        elif chunk_type == b"IDAT":
+            idat.append(chunk_data)
+        elif chunk_type == b"IEND":
+            if length != 0:
+                raise ValueError("PNG contains an invalid IEND chunk")
+            has_iend = True
+            offset = chunk_end
+            if offset != len(payload):
+                raise ValueError("PNG contains trailing data after IEND")
+            break
+
+        offset = chunk_end
+        chunk_index += 1
+
+    if ihdr is None or not idat or not has_iend:
+        raise ValueError("PNG is missing IHDR, IDAT, or IEND data")
+
+    width, height, bit_depth, color_type, compression, filter_method, interlace = (
+        struct.unpack(">IIBBBBB", ihdr)
+    )
+    if width == 0 or height == 0:
+        raise ValueError("PNG dimensions must be positive")
+    if color_type not in PNG_CHANNELS or bit_depth not in PNG_BIT_DEPTHS[color_type]:
+        raise ValueError("PNG uses an unsupported color type or bit depth")
+    if compression != 0 or filter_method != 0 or interlace not in {0, 1}:
+        raise ValueError("PNG uses an unsupported encoding method")
+    if color_type == 3 and not has_palette:
+        raise ValueError("Indexed PNG is missing its palette")
+
+    scanlines = _png_scanlines(
+        width,
+        height,
+        PNG_CHANNELS[color_type],
+        bit_depth,
+        interlace,
+    )
+    expected_size = sum(rows * (row_bytes + 1) for rows, row_bytes in scanlines)
+    if expected_size > MAX_DECODED_PNG_BYTES:
+        raise ValueError("Decoded PNG exceeds the validation size limit")
+
+    decoder = zlib.decompressobj()
+    decoded = decoder.decompress(b"".join(idat), expected_size + 1)
+    if decoder.unconsumed_tail or len(decoded) > expected_size:
+        raise ValueError("PNG expands beyond its declared dimensions")
+    decoded += decoder.flush()
+    if not decoder.eof or decoder.unused_data:
+        raise ValueError("PNG contains incomplete or trailing compressed image data")
+    if len(decoded) != expected_size:
+        raise ValueError("PNG decoded data does not match its declared dimensions")
+
+    decoded_offset = 0
+    for rows, row_bytes in scanlines:
+        for _ in range(rows):
+            if decoded[decoded_offset] > 4:
+                raise ValueError("PNG contains an invalid scanline filter")
+            decoded_offset += row_bytes + 1
+    return width, height
 
 
 def _schema_issues(value: dict[str, Any], schema_path: Path, path: str) -> list[Issue]:
@@ -117,7 +256,7 @@ def validate_pack(pack_path: Path) -> dict[str, Any]:
             )
         else:
             try:
-                width, height = _png_size(image_path)
+                width, height = _validate_png(image_path)
                 if (width, height) != (1600, 900):
                     issues.append(
                         Issue(

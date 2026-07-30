@@ -139,7 +139,12 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
             )
 
     template = _require_object(data, "template", issues, "template")
-    if template.get("source") in {"user", "existing-deck"} and not template.get("path"):
+    template_source = template.get("source")
+    if (
+        isinstance(template_source, str)
+        and template_source in {"user", "existing-deck"}
+        and not template.get("path")
+    ):
         issues.append(
             Issue(
                 "error",
@@ -162,7 +167,8 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
                 )
             )
             continue
-        if value.get("available") not in {True, False, None}:
+        available = value.get("available")
+        if available is not None and not isinstance(available, bool):
             issues.append(
                 Issue(
                     "error",
@@ -196,7 +202,7 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
             continue
         status = step.get("status")
         reason = step.get("reason")
-        if status not in STEP_STATUSES:
+        if not isinstance(status, str) or status not in STEP_STATUSES:
             issues.append(
                 Issue(
                     "error",
@@ -205,7 +211,11 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
                     f"workflow.steps.{name}.status",
                 )
             )
-        if status in {"skipped", "not-applicable"} and not str(reason or "").strip():
+        if (
+            isinstance(status, str)
+            and status in {"skipped", "not-applicable"}
+            and not str(reason or "").strip()
+        ):
             issues.append(
                 Issue(
                     "error",
@@ -293,7 +303,7 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
             )
         else:
             for asset_id in refs:
-                if asset_id not in asset_id_set:
+                if isinstance(asset_id, str) and asset_id not in asset_id_set:
                     issues.append(
                         Issue(
                             "error",
@@ -305,11 +315,38 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
     _check_unique(slide_ids, "slide id", "slides", issues)
     _check_unique(slide_numbers, "slide number", "slides", issues)
     slide_id_set = set(slide_ids)
+    if slide_numbers and sorted(slide_numbers) != list(range(1, len(slide_numbers) + 1)):
+        issues.append(
+            Issue(
+                "error",
+                "slide.number_sequence",
+                "Slide numbers must be contiguous and start at 1",
+                "slides",
+            )
+        )
 
+    asset_used_on_slides: dict[str, set[str]] = {}
     for index, asset in enumerate(assets):
         if not isinstance(asset, dict):
             continue
-        for slide_id in asset.get("used_on_slides", []):
+        asset_id = asset.get("id")
+        used_on_slides = asset.get("used_on_slides", [])
+        if not isinstance(used_on_slides, list):
+            issues.append(
+                Issue(
+                    "error",
+                    "asset.slides",
+                    "used_on_slides must be an array",
+                    f"assets[{index}].used_on_slides",
+                )
+            )
+            continue
+        valid_slide_refs = {
+            slide_id for slide_id in used_on_slides if isinstance(slide_id, str)
+        }
+        if isinstance(asset_id, str):
+            asset_used_on_slides[asset_id] = valid_slide_refs
+        for slide_id in valid_slide_refs:
             if slide_id not in slide_id_set:
                 issues.append(
                     Issue(
@@ -317,6 +354,47 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
                         "reference.slide",
                         f"Asset references unknown slide id: {slide_id}",
                         f"assets[{index}].used_on_slides",
+                    )
+                )
+
+    slide_source_assets: dict[str, set[str]] = {}
+    for slide in slides:
+        if not isinstance(slide, dict):
+            continue
+        slide_id = slide.get("id")
+        refs = slide.get("source_asset_ids", [])
+        if isinstance(slide_id, str) and isinstance(refs, list):
+            slide_source_assets[slide_id] = {
+                asset_id for asset_id in refs if isinstance(asset_id, str)
+            }
+
+    for slide_id, source_asset_ids in slide_source_assets.items():
+        for asset_id in source_asset_ids & asset_id_set:
+            if slide_id not in asset_used_on_slides.get(asset_id, set()):
+                issues.append(
+                    Issue(
+                        "error",
+                        "reference.asset_reverse",
+                        f"Slide {slide_id} uses asset {asset_id}, but the asset does not "
+                        "list the slide",
+                        f"slides[{slide_ids.index(slide_id)}].source_asset_ids",
+                    )
+                )
+    for asset_index, asset in enumerate(assets):
+        if not isinstance(asset, dict):
+            continue
+        asset_id = asset.get("id")
+        if not isinstance(asset_id, str):
+            continue
+        for slide_id in asset_used_on_slides.get(asset_id, set()) & slide_id_set:
+            if asset_id not in slide_source_assets.get(slide_id, set()):
+                issues.append(
+                    Issue(
+                        "error",
+                        "reference.slide_reverse",
+                        f"Asset {asset_id} lists slide {slide_id}, but the slide does not "
+                        "use the asset",
+                        f"assets[{asset_index}].used_on_slides",
                     )
                 )
 
@@ -338,16 +416,110 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
     family_id_set = set(family_ids)
     variant_id_set = set(variant_ids)
 
+    variant_by_id = {
+        item["id"]: item
+        for item in variants
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    family_slide_ids: dict[str, set[str]] = {}
+    variant_slide_ids: dict[str, set[str]] = {}
+    slide_family_memberships: dict[str, set[str]] = {}
+    slide_variant_memberships: dict[str, set[str]] = {}
+
+    for index, family in enumerate(families):
+        if not isinstance(family, dict):
+            continue
+        family_id = family.get("id")
+        listed_slides = family.get("slide_ids", [])
+        if not isinstance(family_id, str) or not isinstance(listed_slides, list):
+            continue
+        valid_listed_slides = {
+            slide_id for slide_id in listed_slides if isinstance(slide_id, str)
+        }
+        family_slide_ids[family_id] = valid_listed_slides
+        for slide_id in valid_listed_slides:
+            slide_family_memberships.setdefault(slide_id, set()).add(family_id)
+            if slide_id not in slide_id_set:
+                issues.append(
+                    Issue(
+                        "error",
+                        "reference.slide",
+                        f"Family references unknown slide id: {slide_id}",
+                        f"visual_system.families[{index}].slide_ids",
+                    )
+                )
+
+    for slide_id, memberships in slide_family_memberships.items():
+        if slide_id in slide_id_set and len(memberships) > 1:
+            issues.append(
+                Issue(
+                    "error",
+                    "reference.family_membership",
+                    f"Slide {slide_id} is assigned to multiple families: "
+                    f"{', '.join(sorted(memberships))}",
+                    "visual_system.families",
+                )
+            )
+
     for index, variant in enumerate(variants):
-        if isinstance(variant, dict) and variant.get("family_id") not in family_id_set:
+        if not isinstance(variant, dict):
+            continue
+        variant_id = variant.get("id")
+        family_id = variant.get("family_id")
+        if isinstance(family_id, str) and family_id not in family_id_set:
             issues.append(
                 Issue(
                     "error",
                     "reference.family",
-                    f"Variant references unknown family: {variant.get('family_id')}",
+                    f"Variant references unknown family: {family_id}",
                     f"visual_system.variants[{index}].family_id",
                 )
             )
+        listed_slides = variant.get("slide_ids", [])
+        if not isinstance(variant_id, str) or not isinstance(listed_slides, list):
+            continue
+        valid_listed_slides = {
+            slide_id for slide_id in listed_slides if isinstance(slide_id, str)
+        }
+        variant_slide_ids[variant_id] = valid_listed_slides
+        for slide_id in valid_listed_slides:
+            slide_variant_memberships.setdefault(slide_id, set()).add(variant_id)
+            if slide_id not in slide_id_set:
+                issues.append(
+                    Issue(
+                        "error",
+                        "reference.slide",
+                        f"Variant references unknown slide id: {slide_id}",
+                        f"visual_system.variants[{index}].slide_ids",
+                    )
+                )
+            if (
+                isinstance(family_id, str)
+                and family_id in family_id_set
+                and slide_id not in family_slide_ids.get(family_id, set())
+            ):
+                issues.append(
+                    Issue(
+                        "error",
+                        "reference.variant_family_membership",
+                        f"Variant {variant_id} lists slide {slide_id}, but family "
+                        f"{family_id} does not list it",
+                        f"visual_system.variants[{index}].slide_ids",
+                    )
+                )
+
+    for slide_id, memberships in slide_variant_memberships.items():
+        if slide_id in slide_id_set and len(memberships) > 1:
+            issues.append(
+                Issue(
+                    "error",
+                    "reference.variant_membership",
+                    f"Slide {slide_id} is assigned to multiple variants: "
+                    f"{', '.join(sorted(memberships))}",
+                    "visual_system.variants",
+                )
+            )
+
     for index, slide in enumerate(slides):
         if not isinstance(slide, dict):
             continue
@@ -364,7 +536,12 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
             continue
         family_id = layout.get("family_id")
         variant_id = layout.get("variant_id")
-        if family_id is not None and family_id not in family_id_set:
+        slide_id = slide.get("id")
+        if (
+            family_id is not None
+            and isinstance(family_id, str)
+            and family_id not in family_id_set
+        ):
             issues.append(
                 Issue(
                     "error",
@@ -373,7 +550,11 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
                     f"slides[{index}].layout.family_id",
                 )
             )
-        if variant_id is not None and variant_id not in variant_id_set:
+        if (
+            variant_id is not None
+            and isinstance(variant_id, str)
+            and variant_id not in variant_id_set
+        ):
             issues.append(
                 Issue(
                     "error",
@@ -382,6 +563,69 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
                     f"slides[{index}].layout.variant_id",
                 )
             )
+        if isinstance(slide_id, str) and isinstance(family_id, str):
+            if (
+                family_id in family_id_set
+                and slide_id not in family_slide_ids.get(family_id, set())
+            ):
+                issues.append(
+                    Issue(
+                        "error",
+                        "reference.family_reverse",
+                        f"Slide {slide_id} selects family {family_id}, but the family "
+                        "does not list the slide",
+                        f"slides[{index}].layout.family_id",
+                    )
+                )
+        if isinstance(slide_id, str):
+            for listed_family_id in slide_family_memberships.get(slide_id, set()):
+                if family_id != listed_family_id:
+                    issues.append(
+                        Issue(
+                            "error",
+                            "reference.slide_family",
+                            f"Family {listed_family_id} lists slide {slide_id}, but the "
+                            f"slide selects {family_id!r}",
+                            f"slides[{index}].layout.family_id",
+                        )
+                    )
+        if isinstance(variant_id, str) and variant_id in variant_id_set:
+            variant_family_id = variant_by_id[variant_id].get("family_id")
+            if family_id != variant_family_id:
+                issues.append(
+                    Issue(
+                        "error",
+                        "reference.variant_family",
+                        f"Slide {slide_id} selects variant {variant_id} from family "
+                        f"{variant_family_id}, but selects family {family_id!r}",
+                        f"slides[{index}].layout.variant_id",
+                    )
+                )
+            if (
+                isinstance(slide_id, str)
+                and slide_id not in variant_slide_ids.get(variant_id, set())
+            ):
+                issues.append(
+                    Issue(
+                        "error",
+                        "reference.variant_reverse",
+                        f"Slide {slide_id} selects variant {variant_id}, but the variant "
+                        "does not list the slide",
+                        f"slides[{index}].layout.variant_id",
+                    )
+                )
+        if isinstance(slide_id, str):
+            for listed_variant_id in slide_variant_memberships.get(slide_id, set()):
+                if variant_id != listed_variant_id:
+                    issues.append(
+                        Issue(
+                            "error",
+                            "reference.slide_variant",
+                            f"Variant {listed_variant_id} lists slide {slide_id}, but the "
+                            f"slide selects {variant_id!r}",
+                            f"slides[{index}].layout.variant_id",
+                        )
+                    )
 
     sample_ids = visual.get("sample_slide_ids", [])
     if not isinstance(sample_ids, list):
@@ -395,7 +639,7 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
         )
     else:
         for slide_id in sample_ids:
-            if slide_id not in slide_id_set:
+            if isinstance(slide_id, str) and slide_id not in slide_id_set:
                 issues.append(
                     Issue(
                         "error",
@@ -405,8 +649,66 @@ def validate_project(data: dict[str, Any]) -> list[Issue]:
                     )
                 )
 
-    _require_object(data, "artifacts", issues, "artifacts")
-    _require_object(data, "qa", issues, "qa")
+    artifacts = _require_object(data, "artifacts", issues, "artifacts")
+    qa = _require_object(data, "qa", issues, "qa")
+    editable_step = steps.get("editable-pptx")
+    static_qa_step = steps.get("static-qa")
+    visual_samples_step = steps.get("visual-samples")
+    if (
+        isinstance(editable_step, dict)
+        and editable_step.get("status") == "completed"
+        and (
+            not isinstance(artifacts.get("pptx"), str)
+            or not artifacts.get("pptx", "").strip()
+        )
+    ):
+        issues.append(
+            Issue(
+                "error",
+                "workflow.artifact",
+                "Completed editable-pptx step requires artifacts.pptx",
+                "artifacts.pptx",
+            )
+        )
+    if isinstance(static_qa_step, dict) and static_qa_step.get("status") == "completed":
+        qa_status = qa.get("status")
+        if (
+            not isinstance(qa_status, str)
+            or qa_status not in {"passed", "passed-with-warnings", "failed"}
+        ):
+            issues.append(
+                Issue(
+                    "error",
+                    "workflow.qa_status",
+                    "Completed static-qa step requires a completed qa.status",
+                    "qa.status",
+                )
+            )
+        if (
+            not isinstance(artifacts.get("qa_report"), str)
+            or not artifacts.get("qa_report", "").strip()
+        ):
+            issues.append(
+                Issue(
+                    "error",
+                    "workflow.artifact",
+                    "Completed static-qa step requires artifacts.qa_report",
+                    "artifacts.qa_report",
+                )
+            )
+    if (
+        isinstance(visual_samples_step, dict)
+        and visual_samples_step.get("status") == "completed"
+        and (not isinstance(sample_ids, list) or not sample_ids)
+    ):
+        issues.append(
+            Issue(
+                "error",
+                "workflow.visual_samples",
+                "Completed visual-samples step requires sample_slide_ids",
+                "visual_system.sample_slide_ids",
+            )
+        )
     return issues
 
 

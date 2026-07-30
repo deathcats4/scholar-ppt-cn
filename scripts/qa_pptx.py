@@ -69,6 +69,7 @@ REQUIRED_PARTS = {
     "ppt/presentation.xml",
 }
 R_ID = f"{{{NS['r']}}}embed"
+R_REL_ID = f"{{{NS['r']}}}id"
 
 
 def _natural_slide_key(name: str) -> tuple[int, str]:
@@ -97,25 +98,109 @@ def _resolve_target(base_part: str, target: str) -> str:
     return posixpath.normpath(posixpath.join(base_dir, target))
 
 
-def _slide_relationships(
-    zf: zipfile.ZipFile, slide_name: str
-) -> dict[str, tuple[str, bool]]:
-    path = PurePosixPath(slide_name)
-    rel_name = str(path.parent / "_rels" / f"{path.name}.rels")
-    if rel_name not in zf.namelist():
-        return {}
-    root = _xml(zf, rel_name)
-    result: dict[str, tuple[str, bool]] = {}
+def _relationship_entries(
+    root: ET.Element, base_part: str
+) -> dict[str, tuple[str, bool, str]]:
+    result: dict[str, tuple[str, bool, str]] = {}
     for rel in root.findall("rel:Relationship", NS):
         rel_id = rel.attrib.get("Id", "")
         external = rel.attrib.get("TargetMode") == "External"
+        target = rel.attrib.get("Target", "")
         result[rel_id] = (
-            rel.attrib.get("Target", "")
-            if external
-            else _resolve_target(slide_name, rel.attrib.get("Target", "")),
+            target if external else _resolve_target(base_part, target),
             external,
+            rel.attrib.get("Type", ""),
         )
     return result
+
+
+def _presentation_slide_names(
+    presentation: ET.Element,
+    presentation_rels: dict[str, tuple[str, bool, str]],
+    slide_parts: set[str],
+    issues: list[Issue],
+) -> list[str]:
+    slide_list = presentation.find("p:sldIdLst", NS)
+    slide_nodes = [] if slide_list is None else slide_list.findall("p:sldId", NS)
+    ordered: list[str] = []
+    seen_targets: set[str] = set()
+    for index, slide_node in enumerate(slide_nodes, start=1):
+        rel_id = slide_node.attrib.get(R_REL_ID)
+        if not rel_id:
+            issues.append(
+                Issue(
+                    "error",
+                    "pptx.slide_relationship",
+                    "Slide entry has no relationship id",
+                    f"ppt/presentation.xml:sldId[{index}]",
+                )
+            )
+            continue
+        relationship = presentation_rels.get(rel_id)
+        if relationship is None:
+            issues.append(
+                Issue(
+                    "error",
+                    "pptx.slide_relationship",
+                    f"Slide relationship does not exist: {rel_id}",
+                    f"ppt/presentation.xml:sldId[{index}]",
+                )
+            )
+            continue
+        target, external, rel_type = relationship
+        if external:
+            issues.append(
+                Issue(
+                    "error",
+                    "pptx.slide_relationship",
+                    f"Slide relationship cannot be external: {rel_id}",
+                    f"ppt/presentation.xml:sldId[{index}]",
+                )
+            )
+            continue
+        if rel_type != "slide" and not rel_type.endswith("/slide"):
+            issues.append(
+                Issue(
+                    "error",
+                    "pptx.slide_relationship_type",
+                    f"Relationship {rel_id} is not a slide relationship",
+                    "ppt/_rels/presentation.xml.rels",
+                )
+            )
+            continue
+        if target in seen_targets:
+            issues.append(
+                Issue(
+                    "error",
+                    "pptx.duplicate_slide_reference",
+                    f"Slide part is referenced more than once: {target}",
+                    "ppt/presentation.xml",
+                )
+            )
+            continue
+        seen_targets.add(target)
+        if target not in slide_parts:
+            issues.append(
+                Issue(
+                    "error",
+                    "pptx.slide_relationship_target",
+                    f"Slide relationship target does not exist: {target or '<empty>'}",
+                    f"ppt/presentation.xml:sldId[{index}]",
+                )
+            )
+            continue
+        ordered.append(target)
+
+    for orphan in sorted(slide_parts - seen_targets, key=_natural_slide_key):
+        issues.append(
+            Issue(
+                "error",
+                "pptx.orphan_slide_part",
+                "Slide part is not referenced by presentation.xml",
+                orphan,
+            )
+        )
+    return ordered
 
 
 def _image_size(data: bytes) -> tuple[int, int] | None:
@@ -262,7 +347,18 @@ def inspect_pptx(path: Path, project: dict[str, Any] | None = None) -> dict[str,
         if "ppt/presentation.xml" not in names:
             return make_report("qa_pptx", issues, **details)
 
-        presentation = _xml(zf, "ppt/presentation.xml")
+        try:
+            presentation = _xml(zf, "ppt/presentation.xml")
+        except ET.ParseError as exc:
+            issues.append(
+                Issue(
+                    "error",
+                    "pptx.presentation_xml",
+                    str(exc),
+                    "ppt/presentation.xml",
+                )
+            )
+            return make_report("qa_pptx", issues, **details)
         size = presentation.find("p:sldSz", NS)
         slide_width = slide_height = 0
         if size is None:
@@ -292,13 +388,61 @@ def inspect_pptx(path: Path, project: dict[str, Any] | None = None) -> dict[str,
                     )
                 )
 
-        slide_names = sorted(
-            (
-                name
-                for name in names
-                if re.fullmatch(r"ppt/slides/slide\d+\.xml", name)
-            ),
-            key=_natural_slide_key,
+        relationship_maps: dict[str, dict[str, tuple[str, bool, str]]] = {}
+        for rel_name in sorted(name for name in names if name.endswith(".rels")):
+            try:
+                rel_root = _xml(zf, rel_name)
+            except ET.ParseError as exc:
+                issues.append(
+                    Issue("error", "pptx.relationship_xml", str(exc), rel_name)
+                )
+                relationship_maps[rel_name] = {}
+                continue
+            base_part = _relationship_base(rel_name)
+            rel_entries = _relationship_entries(rel_root, base_part)
+            relationship_maps[rel_name] = rel_entries
+            for target, external, _rel_type in rel_entries.values():
+                if external:
+                    issues.append(
+                        Issue(
+                            "warning",
+                            "pptx.external_relationship",
+                            f"External relationship target: {target}",
+                            rel_name,
+                        )
+                    )
+                    continue
+                if target and target not in names:
+                    issues.append(
+                        Issue(
+                            "error",
+                            "pptx.broken_relationship",
+                            f"Relationship target does not exist: {target}",
+                            rel_name,
+                        )
+                    )
+
+        presentation_rel_name = "ppt/_rels/presentation.xml.rels"
+        if presentation_rel_name not in names:
+            issues.append(
+                Issue(
+                    "error",
+                    "pptx.presentation_relationships",
+                    "Missing presentation relationship part",
+                    presentation_rel_name,
+                )
+            )
+        slide_parts = {
+            name
+            for name in names
+            if PurePosixPath(name).parent == PurePosixPath("ppt/slides")
+            and name.endswith(".xml")
+        }
+        slide_names = _presentation_slide_names(
+            presentation,
+            relationship_maps.get(presentation_rel_name, {}),
+            slide_parts,
+            issues,
         )
         details["slide_count"] = len(slide_names)
         details["media_count"] = sum(
@@ -329,38 +473,6 @@ def inspect_pptx(path: Path, project: dict[str, Any] | None = None) -> dict[str,
                     name,
                 )
             )
-
-        for rel_name in sorted(name for name in names if name.endswith(".rels")):
-            try:
-                rel_root = _xml(zf, rel_name)
-            except ET.ParseError as exc:
-                issues.append(
-                    Issue("error", "pptx.relationship_xml", str(exc), rel_name)
-                )
-                continue
-            base_part = _relationship_base(rel_name)
-            for rel in rel_root.findall("rel:Relationship", NS):
-                target = rel.attrib.get("Target", "")
-                if rel.attrib.get("TargetMode") == "External":
-                    issues.append(
-                        Issue(
-                            "warning",
-                            "pptx.external_relationship",
-                            f"External relationship target: {target}",
-                            rel_name,
-                        )
-                    )
-                    continue
-                resolved = _resolve_target(base_part, target)
-                if resolved and resolved not in names:
-                    issues.append(
-                        Issue(
-                            "error",
-                            "pptx.broken_relationship",
-                            f"Relationship target does not exist: {resolved}",
-                            rel_name,
-                        )
-                    )
 
         font_names: set[str] = set()
         text_boxes: list[tuple[int, str, tuple[int, int, int, int]]] = []
@@ -427,7 +539,11 @@ def inspect_pptx(path: Path, project: dict[str, Any] | None = None) -> dict[str,
                         )
                     )
 
-            slide_rels = _slide_relationships(zf, slide_name)
+            slide_path = PurePosixPath(slide_name)
+            slide_rel_name = str(
+                slide_path.parent / "_rels" / f"{slide_path.name}.rels"
+            )
+            slide_rels = relationship_maps.get(slide_rel_name, {})
             for shape in _direct_shapes(root):
                 box = _shape_box(shape)
                 if box is None:
@@ -480,7 +596,7 @@ def inspect_pptx(path: Path, project: dict[str, Any] | None = None) -> dict[str,
                 blip = shape.find(".//a:blip", NS)
                 rel_id = blip.attrib.get(R_ID) if blip is not None else None
                 if rel_id and rel_id in slide_rels:
-                    media_name, external = slide_rels[rel_id]
+                    media_name, external, _rel_type = slide_rels[rel_id]
                     if not external and media_name in names and width > 0 and height > 0:
                         pixels = _image_size(zf.read(media_name))
                         if pixels:

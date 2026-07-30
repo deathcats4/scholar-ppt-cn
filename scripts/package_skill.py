@@ -25,7 +25,19 @@ PACKAGE_ROOTS = (
 )
 LEGACY_TEMPLATE = "assets/templates/scholar-ppt-cn-reference-template.pptx"
 EXCLUDED_NAMES = {"__pycache__", ".DS_Store", "Thumbs.db"}
+AUTHORING_ONLY_PATHS = {
+    "assets/visual-reference-packs/blue-academic/contact-sheet.png",
+}
+AUTHORING_ONLY_PREFIXES = (
+    "assets/visual-reference-packs/blue-academic/generation/",
+)
 FIXED_ZIP_TIME = (2020, 1, 1, 0, 0, 0)
+
+
+def _is_authoring_only(relative: str) -> bool:
+    return relative in AUTHORING_ONLY_PATHS or relative.startswith(
+        AUTHORING_ONLY_PREFIXES
+    )
 
 
 def _files(root: Path, include_legacy_template: bool) -> list[Path]:
@@ -46,6 +58,8 @@ def _files(root: Path, include_legacy_template: bool) -> list[Path]:
             if candidate.suffix in {".pyc", ".pyo"}:
                 continue
             if relative == LEGACY_TEMPLATE and not include_legacy_template:
+                continue
+            if _is_authoring_only(relative):
                 continue
             result.append(candidate)
     return sorted(set(result), key=lambda item: item.relative_to(root).as_posix())
