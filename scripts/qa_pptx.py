@@ -374,24 +374,50 @@ def _image_size(data: bytes) -> tuple[int, int] | None:
         stream.seek(max(length - 2, 0), io.SEEK_CUR)
 
 
-def _direct_shapes(root: ET.Element) -> list[ET.Element]:
+ShapeRecord = tuple[ET.Element, tuple[int, int, int, int], str]
+Transform = tuple[float, float, float, float]
+
+
+def _slide_shapes(root: ET.Element) -> list[ShapeRecord]:
     tree = root.find(".//p:cSld/p:spTree", NS)
     if tree is None:
         return []
+    records: list[ShapeRecord] = []
+    for child in tree:
+        records.extend(_iter_shape_records(child, (1.0, 1.0, 0.0, 0.0), ()))
+    return records
+
+
+def _iter_shape_records(
+    node: ET.Element,
+    transform: Transform,
+    name_path: tuple[str, ...],
+) -> list[ShapeRecord]:
     supported = {
         f"{{{NS['p']}}}sp",
         f"{{{NS['p']}}}pic",
         f"{{{NS['p']}}}graphicFrame",
         f"{{{NS['p']}}}cxnSp",
     }
-    return [child for child in tree if child.tag in supported]
+    if node.tag == f"{{{NS['p']}}}grpSp":
+        group_name = _shape_name(node)
+        group_transform = _compose_group_transform(node, transform)
+        group_path = name_path + (group_name,)
+        records: list[ShapeRecord] = []
+        for child in node:
+            records.extend(_iter_shape_records(child, group_transform, group_path))
+        return records
+    if node.tag not in supported:
+        return []
+    box = _shape_box(node)
+    if box is None:
+        return []
+    shape_name = _shape_name(node)
+    display_name = " / ".join(name_path + (shape_name,)) if name_path else shape_name
+    return [(node, _apply_transform(box, transform), display_name)]
 
 
-def _shape_box(shape: ET.Element) -> tuple[int, int, int, int] | None:
-    if shape.tag == f"{{{NS['p']}}}graphicFrame":
-        xfrm = shape.find("p:xfrm", NS)
-    else:
-        xfrm = shape.find("p:spPr/a:xfrm", NS)
+def _xfrm_box(xfrm: ET.Element | None) -> tuple[int, int, int, int] | None:
     if xfrm is None:
         return None
     off = xfrm.find("a:off", NS)
@@ -409,12 +435,63 @@ def _shape_box(shape: ET.Element) -> tuple[int, int, int, int] | None:
         return None
 
 
+def _compose_group_transform(group: ET.Element, parent: Transform) -> Transform:
+    parent_sx, parent_sy, parent_tx, parent_ty = parent
+    xfrm = group.find("p:grpSpPr/a:xfrm", NS)
+    group_box = _xfrm_box(xfrm)
+    if group_box is None:
+        return parent
+    group_x, group_y, group_w, group_h = group_box
+    ch_off = xfrm.find("a:chOff", NS) if xfrm is not None else None
+    ch_ext = xfrm.find("a:chExt", NS) if xfrm is not None else None
+    try:
+        child_x = int(ch_off.attrib.get("x", "0")) if ch_off is not None else 0
+        child_y = int(ch_off.attrib.get("y", "0")) if ch_off is not None else 0
+        child_w = int(ch_ext.attrib.get("cx", str(group_w))) if ch_ext is not None else group_w
+        child_h = int(ch_ext.attrib.get("cy", str(group_h))) if ch_ext is not None else group_h
+    except ValueError:
+        return parent
+    if child_w == 0 or child_h == 0:
+        return parent
+    group_sx = group_w / child_w
+    group_sy = group_h / child_h
+    return (
+        parent_sx * group_sx,
+        parent_sy * group_sy,
+        parent_sx * (group_x - group_sx * child_x) + parent_tx,
+        parent_sy * (group_y - group_sy * child_y) + parent_ty,
+    )
+
+
+def _apply_transform(box: tuple[int, int, int, int], transform: Transform) -> tuple[int, int, int, int]:
+    sx, sy, tx, ty = transform
+    x, y, width, height = box
+    return (
+        round(sx * x + tx),
+        round(sy * y + ty),
+        round(abs(sx) * width),
+        round(abs(sy) * height),
+    )
+
+
+def _shape_box(shape: ET.Element) -> tuple[int, int, int, int] | None:
+    if shape.tag == f"{{{NS['p']}}}graphicFrame":
+        xfrm = shape.find("p:xfrm", NS)
+    else:
+        xfrm = shape.find("p:spPr/a:xfrm", NS)
+    return _xfrm_box(xfrm)
+
+
 def _shape_name(shape: ET.Element) -> str:
     props = shape.find("p:nvSpPr/p:cNvPr", NS)
     if props is None:
         props = shape.find("p:nvPicPr/p:cNvPr", NS)
     if props is None:
         props = shape.find("p:nvGraphicFramePr/p:cNvPr", NS)
+    if props is None:
+        props = shape.find("p:nvCxnSpPr/p:cNvPr", NS)
+    if props is None:
+        props = shape.find("p:nvGrpSpPr/p:cNvPr", NS)
     return props.attrib.get("name", "unnamed") if props is not None else "unnamed"
 
 
@@ -455,10 +532,13 @@ def _shape_text_role(
     slide_height: int,
     sizes: list[float],
 ) -> str:
-    normalized_name = shape_name.strip().upper()
-    for prefix, role in TEXT_ROLE_PREFIXES.items():
-        if normalized_name.startswith(prefix):
-            return role
+    normalized_names = [shape_name.strip().upper()]
+    if "/" in shape_name:
+        normalized_names.append(shape_name.rsplit("/", 1)[-1].strip().upper())
+    for normalized_name in normalized_names:
+        for prefix, role in TEXT_ROLE_PREFIXES.items():
+            if normalized_name.startswith(prefix):
+                return role
     if _is_source_footer_or_page_number(text, box, slide_height):
         return "source"
     if _is_necessary_caption(text):
@@ -788,14 +868,10 @@ def inspect_pptx(
                 slide_path.parent / "_rels" / f"{slide_path.name}.rels"
             )
             slide_rels = relationship_maps.get(slide_rel_name, {})
-            slide_shapes = _direct_shapes(root)
+            slide_shapes = _slide_shapes(root)
             picture_boxes: list[tuple[str, tuple[int, int, int, int]]] = []
-            for shape in slide_shapes:
-                box = _shape_box(shape)
-                if box is None:
-                    continue
+            for shape, box, shape_name in slide_shapes:
                 x, y, width, height = box
-                shape_name = _shape_name(shape)
                 if shape.tag == f"{{{NS['p']}}}pic":
                     picture_boxes.append((shape_name, box))
                 if width < 0 or height < 0:
@@ -860,15 +936,18 @@ def inspect_pptx(
                                 f"slide:{slide_index}:{shape_name}",
                             )
                         )
+                    issue_path = f"slide:{slide_index}:{shape_name}"
                     sizes = _shape_font_sizes(shape)
+                    has_norm_autofit, autofit_scale = _shape_norm_autofit(shape)
+                    role = _shape_text_role(
+                        shape_name, shape_text, box, slide_height, sizes
+                    )
+                    if role == "body":
+                        typography = details["typography"]
+                        typography["body_text_boxes"] += 1
                     if sizes:
                         declared_min_size = min(sizes)
-                        has_norm_autofit, autofit_scale = _shape_norm_autofit(shape)
                         effective_min_size = declared_min_size * autofit_scale
-                        role = _shape_text_role(
-                            shape_name, shape_text, box, slide_height, sizes
-                        )
-                        issue_path = f"slide:{slide_index}:{shape_name}"
 
                         if effective_min_size < 9:
                             issues.append(
@@ -881,8 +960,6 @@ def inspect_pptx(
                             )
 
                         if role == "body":
-                            typography = details["typography"]
-                            typography["body_text_boxes"] += 1
                             if has_norm_autofit:
                                 typography["body_norm_autofit"] += 1
                                 issues.append(

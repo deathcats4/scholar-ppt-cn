@@ -3,9 +3,13 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 import shutil
 import subprocess
 from pathlib import Path
+
+
+SLIDE_IMAGE_RE = re.compile(r"^slide-(\d+)\.png$")
 
 
 def _run(command: list[str]) -> None:
@@ -15,6 +19,20 @@ def _run(command: list[str]) -> None:
             f"Command failed ({result.returncode}): {' '.join(command)}\n"
             f"stdout: {result.stdout}\nstderr: {result.stderr}"
         )
+
+
+def _clear_previous_outputs(output_dir: Path) -> None:
+    for pattern in ("slide-*.png", "*.pdf"):
+        for path in output_dir.glob(pattern):
+            if path.is_file():
+                path.unlink()
+
+
+def _slide_number(path: Path) -> int:
+    match = SLIDE_IMAGE_RE.match(path.name)
+    if not match:
+        raise RuntimeError(f"Unexpected slide preview filename: {path.name}")
+    return int(match.group(1))
 
 
 def render(pptx: Path, output_dir: Path, dpi: int = 144, montage: Path | None = None, columns: int = 4) -> dict:
@@ -28,6 +46,7 @@ def render(pptx: Path, output_dir: Path, dpi: int = 144, montage: Path | None = 
         raise RuntimeError("Poppler pdftoppm is required to render PDF pages.")
 
     output_dir.mkdir(parents=True, exist_ok=True)
+    _clear_previous_outputs(output_dir)
     _run([soffice, "--headless", "--convert-to", "pdf", "--outdir", str(output_dir), str(pptx)])
     pdf = output_dir / f"{pptx.stem}.pdf"
     if not pdf.exists():
@@ -38,9 +57,16 @@ def render(pptx: Path, output_dir: Path, dpi: int = 144, montage: Path | None = 
 
     prefix = output_dir / "slide"
     _run([pdftoppm, "-png", "-r", str(dpi), str(pdf), str(prefix)])
-    pages = sorted(output_dir.glob("slide-*.png"))
+    pages = sorted(output_dir.glob("slide-*.png"), key=_slide_number)
     if not pages:
         raise RuntimeError("No slide images were produced.")
+    page_numbers = [_slide_number(path) for path in pages]
+    expected_numbers = list(range(1, len(pages) + 1))
+    if page_numbers != expected_numbers:
+        raise RuntimeError(
+            "Slide preview sequence is not contiguous: "
+            f"found {page_numbers}, expected {expected_numbers}"
+        )
 
     montage_path = None
     if montage:

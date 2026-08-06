@@ -1,6 +1,6 @@
 # PPTX QA Rules
 
-Use these rules when the environment provides file, PPTX, rendering, or inspection tools. Static QA checks the PPTX package itself; it does not replace visual review, semantic review, template/mockup comparison, or scientific figure readability.
+Use these rules when the environment provides file, PPTX, rendering, or inspection tools. Static QA checks the PPTX package itself, including supported objects nested inside PowerPoint groups; it does not replace visual review, semantic review, template/mockup comparison, or scientific figure readability.
 
 ## PPTX Delivery Contract
 
