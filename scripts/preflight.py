@@ -4,6 +4,7 @@ import argparse
 import importlib.util
 import platform
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -18,6 +19,7 @@ EXECUTABLES = {
     "office_renderer": ("soffice", "libreoffice"),
     "pdf_renderer": ("pdftoppm", "mutool"),
     "pdf_converter": ("pdftocairo",),
+    "node_runtime": ("node",),
 }
 OPTIONAL_MODULES = {
     "pptx_write": "pptx",
@@ -37,8 +39,6 @@ CJK_FONT_HINTS = (
     "simhei",
     "simsun",
     "deng",
-    "思源黑体",
-    "微软雅黑",
 )
 
 
@@ -48,6 +48,42 @@ def _find_executable(names: tuple[str, ...]) -> str | None:
         if found:
             return found
     return None
+
+
+def _probe_node_package(node: str | None, package: str) -> dict[str, Any]:
+    if not node:
+        return {
+            "available": False,
+            "provider": None,
+            "notes": "Node.js is not available.",
+        }
+    command = [
+        node,
+        "-e",
+        (
+            "try { console.log(require.resolve("
+            + repr(package)
+            + ")); } catch (error) { process.exit(2); }"
+        ),
+    ]
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return {
+            "available": False,
+            "provider": None,
+            "notes": f"Unable to probe {package}: {exc}",
+        }
+    provider = result.stdout.strip() if result.returncode == 0 else None
+    return {
+        "available": result.returncode == 0,
+        "provider": provider,
+        "notes": (
+            f"Node package available: {package}"
+            if result.returncode == 0
+            else f"Node package not resolved from current environment: {package}"
+        ),
+    }
 
 
 def _font_roots() -> list[Path]:
@@ -122,6 +158,16 @@ def probe() -> dict[str, Any]:
             "provider": module if available else None,
             "notes": f"Python module {'available' if available else 'not installed'}: {module}",
         }
+    node = capabilities.get("node_runtime", {}).get("provider")
+    capabilities["pptxgenjs_default"] = _probe_node_package(node, "pptxgenjs")
+    capabilities["pptx_generation_policy"] = {
+        "available": True,
+        "provider": "PptxGenJS -> python-pptx fallback",
+        "notes": (
+            "Use PptxGenJS for new editable decks when available; "
+            "use python-pptx as the default fallback."
+        ),
+    }
     cjk_fonts, cjk_font_candidates = _font_inventory()
     capabilities["cjk_fonts"] = cjk_fonts
     capabilities["image_generation"] = {

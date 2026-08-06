@@ -1,12 +1,10 @@
 # Visible Text Filter Rules
 
-Final slides speak to the audience, not to the agent building or reviewing the
-deck.
-
 ## Internal workflow language
 
-Do not expose terms such as:
+Do not place internal workflow language into final slides or image-model mockups.
 
+Avoid visible slide text such as:
 - template DNA;
 - minimal brief;
 - archetype;
@@ -21,38 +19,46 @@ Do not expose terms such as:
 - page task;
 - source gap;
 - internal route;
-- internal file or workflow label.
+- internal file or workflow label;
+- system prompt or prompt instructions;
+- family ID or variant ID;
+- placeholder or example-text instructions.
 
-## Defensive meta-language
+If an internal idea must appear, rewrite it as normal presentation content supported by the source material.
 
-Keep agent-facing epistemic guardrails in `project.json`, QA results, or speaker
-notes. Do not place instructions about how the audience or the builder must not
-misread the evidence into visible slide copy.
+## Literature-report presentation labels
 
-Review and normally rewrite visible phrases such as:
+For literature reports and journal-club decks, do not use these labels merely to frame normal content:
+- 读图要点;
+- 读图结论;
+- 关键认识;
+- 综合判断;
+- 支持证据;
+- 注意事项;
+- 证据观察;
+- 预期输出;
+- 本文切口;
+- 证据页 1/2 or 2/2;
+- 基于论文证据的结构化归纳;
+- 作者解释;
+- 作者综合模型;
+- 证据锚点;
+- 本页重点;
+- 一句话结论.
 
-- "注意：这是间接约束";
-- "不能把……误写成……";
-- "不要将……理解为……";
-- "评价原则：区分……";
-- "作者优选……，不能视为直接测得……";
-- "这篇论文最重要的贡献不是……而是……".
+“核心问题” and “结论” are allowed. Preserve the actual supported statement and remove the editorial label.
 
-State the supported academic content directly:
+Do not automatically wrap normal academic content in generic prefixes such as “提示：” or “注意：”. Use them only when the source or user explicitly requires a genuine warning; otherwise rewrite the content as a direct academic statement.
 
-- prefer "区域年代学证据将主要成矿阶段收窄至 367–331 Ma" over a
-  warning not to misread the interval;
-- prefer "矿化发生在容矿火山岩形成之后" over "不能早于";
-- prefer "深部靶区有待钻探验证" over an agent-style caution;
-- prefer a direct contribution statement over "不是……而是……".
+## Model self-reference and placeholders
 
-Use neutral evidence verbs such as "显示", "支持", "限定", "指向", "倾向" and
-"尚未直接验证". If uncertainty or a limitation is itself the slide's
-communication task, present it as an academic finding or limitation, not as an
-instruction to the audience.
-
-Do not use red warning treatments merely to protect against possible
-over-interpretation. Reserve them for a real anomaly, contradiction, risk, or
-critical boundary that the slide is explicitly discussing.
-
-If an internal idea must appear, rewrite it as normal presentation content.
+Do not expose model or generation language such as:
+- 作为 AI / 作为一个语言模型;
+- 根据你的要求;
+- 以下是为你生成的;
+- 我将为你;
+- TODO / TBD;
+- lorem ipsum;
+- 示例文本;
+- 在此插入图片;
+- 点击添加标题 / 点击添加文本.

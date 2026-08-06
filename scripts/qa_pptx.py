@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import hashlib
 import posixpath
 import re
 import struct
@@ -24,6 +25,33 @@ NS = {
     "rel": "http://schemas.openxmlformats.org/package/2006/relationships",
 }
 EMU_PER_INCH = 914400
+DEFAULT_QA_PROFILE = "group-meeting"
+QA_PROFILES: dict[str, dict[str, Any]] = {
+    "group-meeting": {
+        "strict_projection": True,
+    },
+    "defense": {
+        "strict_projection": True,
+    },
+    "conference": {
+        "strict_projection": True,
+    },
+    "classroom": {
+        "strict_projection": True,
+    },
+    "template-preserve": {
+        "strict_projection": False,
+        "allow_legacy_icon_fonts": True,
+    },
+}
+TEXT_ROLE_PREFIXES = {
+    "TITLE_": "title",
+    "BODY_": "body",
+    "LABEL_": "label",
+    "CAPTION_": "caption",
+    "SOURCE_": "source",
+    "PAGE_NUMBER_": "source",
+}
 INTERNAL_TERMS = (
     "template dna",
     "模板 dna",
@@ -44,25 +72,123 @@ INTERNAL_TERMS = (
     "制作说明",
     "source gap",
     "来源缺口",
+    "design rationale",
+    "设计理由",
+    "reading order",
+    "阅读顺序",
+    "risk level",
+    "风险等级",
+    "candidate plan",
+    "候选方案",
+    "rebuild queue",
+    "visual_review",
+    "source_ref",
+    "project.json",
+    "system prompt",
+    "系统指令",
+    "提示词",
+    "pptxgenjs",
+    "python-pptx",
 )
-DEFENSIVE_META_PATTERNS = (
-    (
-        "instructional caution",
-        re.compile(r"(?:注意|警告|提示)\s*[：:].{0,24}(?:间接|不能|不要|避免|误写|误解|推断)"),
-    ),
-    (
-        "misreading instruction",
-        re.compile(r"(?:不能|不要|避免)(?:把|将).{0,48}(?:误写|误解|理解为|视为|当作|等同)"),
-    ),
-    (
-        "reviewer principle",
-        re.compile(r"(?:评价原则|解读原则|阅读提示)\s*[：:]"),
-    ),
-    (
-        "meta contribution framing",
-        re.compile(r"(?:最重要的)?贡献.{0,32}(?:不是|并非).{0,48}(?:而是|而在于)"),
-    ),
+
+DISALLOWED_PRESENTATION_LABELS = (
+    "读图要点",
+    "读图结论",
+    "关键认识",
+    "综合判断",
+    "支持证据",
+    "注意事项",
+    "证据观察",
+    "预期输出",
+    "本文切口",
+    "基于论文证据的结构化归纳",
+    "作者解释",
+    "作者综合模型",
+    "证据锚点",
+    "本页重点",
+    "一句话结论",
 )
+
+MODEL_META_TERMS = (
+    "作为 ai",
+    "作为一个语言模型",
+    "根据你的要求",
+    "以下是为你生成的",
+    "我将为你",
+    "todo",
+    "tbd",
+    "lorem ipsum",
+    "示例文本",
+    "在此插入图片",
+    "点击添加标题",
+    "点击添加文本",
+    "placeholder",
+)
+
+DISALLOWED_ICON_GLYPHS = (
+    "💡",
+    "📖",
+    "📚",
+    "📄",
+    "📑",
+    "👤",
+    "👥",
+    "🌍",
+    "🌎",
+    "🌏",
+    "👁",
+    "👀",
+    "🎯",
+    "🏆",
+    "🧩",
+    "⚙",
+    "✅",
+    "☑",
+    "❗",
+    "⚠",
+    "🔬",
+    "⚗",
+    "🔨",
+    "◎",
+    "✦",
+    "▤",
+    "▰",
+    "↻",
+)
+
+DISALLOWED_ICON_FONT_MARKERS = (
+    "wingdings",
+    "webdings",
+    "font awesome",
+    "material icons",
+    "material symbols",
+    "segoe ui emoji",
+    "apple color emoji",
+    "noto color emoji",
+)
+
+EVIDENCE_PAGE_LABEL_PATTERN = re.compile(
+    r"证据页\s*[12一二]\s*/\s*2", re.IGNORECASE
+)
+EDITORIAL_WARNING_PREFIX_PATTERN = re.compile(
+    r"^\s*(?:提示|注意)\s*[：:]", re.IGNORECASE
+)
+
+
+def _visible_policy_hits(text: str) -> list[tuple[str, str]]:
+    normalized = text.casefold()
+    hits: list[tuple[str, str]] = []
+    for term in DISALLOWED_PRESENTATION_LABELS:
+        if term.casefold() in normalized:
+            hits.append(("label", term))
+    if EVIDENCE_PAGE_LABEL_PATTERN.search(text):
+        hits.append(("label", "证据页 1/2 or 2/2"))
+    for term in MODEL_META_TERMS:
+        if term in normalized:
+            hits.append(("model-meta", term))
+    return hits
+
+
 REQUIRED_PARTS = {
     "[Content_Types].xml",
     "_rels/.rels",
@@ -292,6 +418,96 @@ def _shape_name(shape: ET.Element) -> str:
     return props.attrib.get("name", "unnamed") if props is not None else "unnamed"
 
 
+def _shape_text(shape: ET.Element) -> str:
+    return " ".join(node.text or "" for node in shape.findall(".//a:t", NS)).strip()
+
+
+def _shape_font_sizes(shape: ET.Element) -> list[float]:
+    sizes: list[float] = []
+    for node in shape.findall(".//*[@sz]"):
+        try:
+            value = int(node.attrib["sz"]) / 100
+        except (KeyError, ValueError):
+            continue
+        if value > 0:
+            sizes.append(value)
+    return sizes
+
+
+def _shape_norm_autofit(shape: ET.Element) -> tuple[bool, float]:
+    node = shape.find(".//a:bodyPr/a:normAutofit", NS)
+    if node is None:
+        return False, 1.0
+    raw_scale = node.attrib.get("fontScale", "100000")
+    try:
+        scale = int(raw_scale) / 100000
+    except ValueError:
+        scale = 1.0
+    if scale <= 0:
+        scale = 1.0
+    return True, scale
+
+
+def _shape_text_role(
+    shape_name: str,
+    text: str,
+    box: tuple[int, int, int, int],
+    slide_height: int,
+    sizes: list[float],
+) -> str:
+    normalized_name = shape_name.strip().upper()
+    for prefix, role in TEXT_ROLE_PREFIXES.items():
+        if normalized_name.startswith(prefix):
+            return role
+    if _is_source_footer_or_page_number(text, box, slide_height):
+        return "source"
+    if _is_necessary_caption(text):
+        return "caption"
+
+    _x, y, _w, height = box
+    if (
+        slide_height
+        and y <= slide_height * 0.2
+        and height <= 1.25 * EMU_PER_INCH
+        and sizes
+        and max(sizes) >= 26
+    ):
+        return "title"
+
+    compact = re.sub(r"\s+", "", text)
+    if len(compact) <= 14 and height <= 0.6 * EMU_PER_INCH:
+        return "label"
+    return "body"
+
+
+def _is_source_footer_or_page_number(
+    text: str, box: tuple[int, int, int, int], slide_height: int
+) -> bool:
+    normalized = text.strip().casefold()
+    _x, y, _w, h = box
+    near_bottom = bool(slide_height) and y + h >= slide_height * 0.86
+    source_like = bool(
+        re.match(
+            r"^(?:图源|资料来源|来源|源文献|source|sources|reference|references|copyright|©|doi\b)",
+            normalized,
+        )
+    )
+    page_number = bool(re.fullmatch(r"(?:0?[1-9]|[1-9]\d{1,2})", normalized))
+    return source_like or (near_bottom and page_number)
+
+
+def _is_necessary_caption(text: str) -> bool:
+    normalized = text.strip().casefold()
+    if len(normalized) > 180:
+        return False
+    return bool(
+        re.match(
+            r"^(?:图\s*\d+|表\s*\d+|图注|表注|fig\.?\s*\d+|figure\s*\d+|table\s*\d+|注\s*[：:])",
+            normalized,
+        )
+    )
+
+
 def _intersection_ratio(
     first: tuple[int, int, int, int], second: tuple[int, int, int, int]
 ) -> float:
@@ -304,15 +520,31 @@ def _intersection_ratio(
     return intersection / smaller
 
 
-def inspect_pptx(path: Path, project: dict[str, Any] | None = None) -> dict[str, Any]:
+def inspect_pptx(
+    path: Path,
+    project: dict[str, Any] | None = None,
+    profile: str = DEFAULT_QA_PROFILE,
+) -> dict[str, Any]:
+    if profile not in QA_PROFILES:
+        raise ValueError(f"Unknown QA profile: {profile}")
+    profile_rules = QA_PROFILES[profile]
+    strict_projection = bool(profile_rules["strict_projection"])
+
     issues: list[Issue] = []
     details: dict[str, Any] = {
         "pptx": str(path),
+        "sha256": hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None,
         "slide_count": 0,
         "canvas_inches": None,
         "fonts": [],
         "media_count": 0,
         "security_parts": [],
+        "qa_profile": profile,
+        "typography": {
+            "strict_projection": strict_projection,
+            "body_text_boxes": 0,
+            "body_norm_autofit": 0,
+        },
     }
     try:
         zf = zipfile.ZipFile(path)
@@ -510,46 +742,62 @@ def inspect_pptx(path: Path, project: dict[str, Any] | None = None) -> dict[str,
                             f"slide:{slide_index}",
                         )
                     )
-            for label, pattern in DEFENSIVE_META_PATTERNS:
-                if pattern.search(text):
-                    issues.append(
-                        Issue(
-                            "warning",
-                            "pptx.defensive_meta_language",
-                            f"Visible copy may read like an agent/reviewer instruction: {label}",
-                            f"slide:{slide_index}",
-                        )
+            for hit_type, value in _visible_policy_hits(text):
+                code = (
+                    "pptx.disallowed_presentation_label"
+                    if hit_type == "label"
+                    else "pptx.model_meta_language"
+                )
+                message = (
+                    f"Disallowed presentation label: {value}"
+                    if hit_type == "label"
+                    else f"Visible model/generation language: {value}"
+                )
+                issues.append(
+                    Issue(
+                        "error",
+                        code,
+                        message,
+                        f"slide:{slide_index}",
                     )
+                )
+            icon_fonts_on_slide: set[str] = set()
             for node in root.findall(".//*[@typeface]"):
                 typeface = node.attrib.get("typeface")
                 if typeface:
                     font_names.add(typeface)
-            for node in root.findall(".//*[@sz]"):
-                try:
-                    size_pt = int(node.attrib["sz"]) / 100
-                except ValueError:
-                    continue
-                if 0 < size_pt < 9:
-                    issues.append(
-                        Issue(
-                            "warning",
-                            "pptx.small_text",
-                            f"Text size below 9 pt: {size_pt:g} pt",
-                            f"slide:{slide_index}",
-                        )
+                    folded_typeface = typeface.casefold()
+                    if any(marker in folded_typeface for marker in DISALLOWED_ICON_FONT_MARKERS):
+                        icon_fonts_on_slide.add(typeface)
+            for typeface in sorted(icon_fonts_on_slide, key=str.casefold):
+                icon_font_severity = (
+                    "warning"
+                    if profile_rules.get("allow_legacy_icon_fonts")
+                    else "error"
+                )
+                issues.append(
+                    Issue(
+                        icon_font_severity,
+                        "pptx.disallowed_icon_font",
+                        f"Disallowed icon or emoji font used: {typeface}",
+                        f"slide:{slide_index}",
                     )
-
+                )
             slide_path = PurePosixPath(slide_name)
             slide_rel_name = str(
                 slide_path.parent / "_rels" / f"{slide_path.name}.rels"
             )
             slide_rels = relationship_maps.get(slide_rel_name, {})
-            for shape in _direct_shapes(root):
+            slide_shapes = _direct_shapes(root)
+            picture_boxes: list[tuple[str, tuple[int, int, int, int]]] = []
+            for shape in slide_shapes:
                 box = _shape_box(shape)
                 if box is None:
                     continue
                 x, y, width, height = box
                 shape_name = _shape_name(shape)
+                if shape.tag == f"{{{NS['p']}}}pic":
+                    picture_boxes.append((shape_name, box))
                 if width < 0 or height < 0:
                     issues.append(
                         Issue(
@@ -592,6 +840,81 @@ def inspect_pptx(path: Path, project: dict[str, Any] | None = None) -> dict[str,
                         )
                 if shape.findall(".//a:t", NS):
                     text_boxes.append((slide_index, shape_name, box))
+                    shape_text = _shape_text(shape)
+                    for glyph in DISALLOWED_ICON_GLYPHS:
+                        if glyph in shape_text:
+                            issues.append(
+                                Issue(
+                                    "error",
+                                    "pptx.disallowed_commercial_icon_glyph",
+                                    f"Disallowed commercial-course icon or decorative glyph: {glyph}",
+                                    f"slide:{slide_index}:{shape_name}",
+                                )
+                            )
+                    if EDITORIAL_WARNING_PREFIX_PATTERN.match(shape_text):
+                        issues.append(
+                            Issue(
+                                "error",
+                                "pptx.disallowed_editorial_prefix",
+                                "Generic 提示：/注意： editorial prefix should be rewritten as a direct academic statement",
+                                f"slide:{slide_index}:{shape_name}",
+                            )
+                        )
+                    sizes = _shape_font_sizes(shape)
+                    if sizes:
+                        declared_min_size = min(sizes)
+                        has_norm_autofit, autofit_scale = _shape_norm_autofit(shape)
+                        effective_min_size = declared_min_size * autofit_scale
+                        role = _shape_text_role(
+                            shape_name, shape_text, box, slide_height, sizes
+                        )
+                        issue_path = f"slide:{slide_index}:{shape_name}"
+
+                        if effective_min_size < 9:
+                            issues.append(
+                                Issue(
+                                    "warning",
+                                    "pptx.small_text",
+                                    f"Effective text size below 9 pt: {effective_min_size:g} pt",
+                                    issue_path,
+                                )
+                            )
+
+                        if role == "body":
+                            typography = details["typography"]
+                            typography["body_text_boxes"] += 1
+                            if has_norm_autofit:
+                                typography["body_norm_autofit"] += 1
+                                issues.append(
+                                    Issue(
+                                        "warning",
+                                        "pptx.body_autofit",
+                                        "Body text uses normAutofit/shrink-to-fit; "
+                                        f"declared {declared_min_size:g} pt, fontScale "
+                                        f"{autofit_scale:.0%}, effective {effective_min_size:g} pt",
+                                        issue_path,
+                                    )
+                                )
+                        elif role == "label" and effective_min_size < 16:
+                            issues.append(
+                                Issue(
+                                    "warning",
+                                    "pptx.label_text_too_small",
+                                    f"Label text effective size is below 16 pt: "
+                                    f"{effective_min_size:g} pt",
+                                    issue_path,
+                                )
+                            )
+                        elif role == "caption" and effective_min_size < 12:
+                            issues.append(
+                                Issue(
+                                    "warning",
+                                    "pptx.caption_text_too_small",
+                                    f"Caption effective size is below 12 pt: "
+                                    f"{effective_min_size:g} pt",
+                                    issue_path,
+                                )
+                            )
 
                 blip = shape.find(".//a:blip", NS)
                 rel_id = blip.attrib.get(R_ID) if blip is not None else None
@@ -612,6 +935,20 @@ def inspect_pptx(path: Path, project: dict[str, Any] | None = None) -> dict[str,
                                         f"slide:{slide_index}:{shape_name}",
                                     )
                                 )
+
+            if not text and slide_width and slide_height and len(picture_boxes) == 1:
+                picture_name, picture_box = picture_boxes[0]
+                _px, _py, picture_width, picture_height = picture_box
+                coverage = (picture_width * picture_height) / max(slide_width * slide_height, 1)
+                if coverage >= 0.9:
+                    issues.append(
+                        Issue(
+                            "warning",
+                            "pptx.possible_flattened_slide",
+                            "Slide appears to be a single near-full-slide image; verify editability",
+                            f"slide:{slide_index}:{picture_name}",
+                        )
+                    )
 
         details["fonts"] = sorted(font_names, key=str.casefold)
         by_slide: dict[int, list[tuple[str, tuple[int, int, int, int]]]] = {}
@@ -696,6 +1033,16 @@ def main() -> int:
     parser.add_argument("--project", type=Path)
     parser.add_argument("--report", type=Path)
     parser.add_argument(
+        "--profile",
+        choices=sorted(QA_PROFILES),
+        default=DEFAULT_QA_PROFILE,
+        help=(
+            "Typography/QA profile. Body font-size findings follow v3.3.1 "
+            "behavior: report readability concerns without turning body size "
+            "or body auto-shrink into delivery-blocking errors."
+        ),
+    )
+    parser.add_argument(
         "--update-project",
         action="store_true",
         help="Write QA status/issues back to --project after the check.",
@@ -705,7 +1052,7 @@ def main() -> int:
     if args.update_project and not args.project:
         parser.error("--update-project requires --project")
     project = load_json(args.project) if args.project else None
-    report = inspect_pptx(args.pptx, project)
+    report = inspect_pptx(args.pptx, project, profile=args.profile)
     if args.report:
         write_json(args.report, report)
     if args.update_project and args.project and project is not None:

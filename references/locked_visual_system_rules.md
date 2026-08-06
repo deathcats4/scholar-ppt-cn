@@ -1,33 +1,29 @@
 # Locked Visual System Rules
 
-After the user approves mockups, enter a locked visual identity internally.
+After the user approves mockups, enter locked visual system internally.
 
-Approved mockups become the quality bar and design-language source for
-reconstruction and expansion. They do not become fixed page wireframes.
+Approved mockups become the valid design source for reconstruction and expansion.
 
-Preserve:
+Approval normally covers:
 
-- title hierarchy;
-- typography rules;
+- composition and page-region structure;
+- image/text proportion;
+- title and body hierarchy;
+- typography roles;
 - color palette;
 - border and line style;
 - emphasis style;
 - source-material treatment;
-- annotation and callout behavior;
-- approximate density and whitespace rhythm.
+- caption/source-note style;
+- footer/page number;
+- approximate density, whitespace rhythm, and cross-slide pacing.
 
-Preserve header, caption/source-note, footer, and page-number behavior only when
-the approved direction or user template actually uses them.
+Approval does not automatically cover:
 
-Do not lock:
+- generic commercial icons, emoji, or decorative symbols;
+- prohibited literature-report labels;
+- image-model-created mechanism diagrams or scientific illustrations;
+- scientific numbers, relationships, arrows, or conclusions that cannot be traced to source material;
+- raster text spelling or exact font appearance.
 
-- exact title wrapping;
-- fixed left/right column proportions;
-- exact image placement or panel count;
-- connector paths;
-- decorative motifs on every page;
-- sample-specific semantic accent colors.
-
-Recompose each slide from its current communication task and evidence geometry.
-The locked identity should make new pages feel related without making them look
-copied.
+Locked visual system is not a fixed stencil. Slides may adapt composition inside the approved system. Cards and bottom conclusion strips are not mandatory recurring components merely because one approved page used them.

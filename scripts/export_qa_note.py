@@ -14,24 +14,24 @@ from scripts.common import load_json
 def render_qa_note(report: dict[str, Any]) -> str:
     summary = report.get("summary", {})
     lines = [
-        "# PPTX QA 说明",
+        "# PPTX QA Note",
         "",
-        f"- 状态：`{report.get('status', 'unknown')}`",
-        f"- 错误：{summary.get('error', 0)}",
-        f"- 警告：{summary.get('warning', 0)}",
-        f"- 信息：{summary.get('info', 0)}",
+        f"- Status: `{report.get('status', 'unknown')}`",
+        f"- Errors: {summary.get('error', 0)}",
+        f"- Warnings: {summary.get('warning', 0)}",
+        f"- Info: {summary.get('info', 0)}",
         "",
     ]
     details = report.get("details", {})
     if isinstance(details, dict):
         lines.extend(
             [
-                "## 产物概况",
+                "## Artifact Summary",
                 "",
-                f"- PPTX：`{details.get('pptx', '')}`",
-                f"- 页数：{details.get('slide_count', '')}",
-                f"- 画布：`{details.get('canvas_inches', '')}`",
-                f"- 媒体数量：{details.get('media_count', '')}",
+                f"- PPTX: `{details.get('pptx', '')}`",
+                f"- Slide count: {details.get('slide_count', '')}",
+                f"- Canvas: `{details.get('canvas_inches', '')}`",
+                f"- Media count: {details.get('media_count', '')}",
                 "",
             ]
         )
@@ -40,9 +40,9 @@ def render_qa_note(report: dict[str, Any]) -> str:
     if issues:
         lines.extend(
             [
-                "## 检查结果",
+                "## Issues",
                 "",
-                "| 严重度 | 代码 | 位置 | 说明 |",
+                "| Severity | Code | Location | Message |",
                 "|---|---|---|---|",
             ]
         )
@@ -56,11 +56,11 @@ def render_qa_note(report: dict[str, Any]) -> str:
             escaped = [str(value).replace("|", "\\|").replace("\n", "<br>") for value in values]
             lines.append("| " + " | ".join(escaped) + " |")
     else:
-        lines.extend(["## 检查结果", "", "未发现静态 QA 问题。"])
+        lines.extend(["## Issues", "", "No static QA issues found."])
     lines.extend(
         [
             "",
-            "> 本说明由 qa-report.json 生成。静态重叠和分辨率提示应结合预览复核。",
+            "> Generated from qa-report.json. Static overlap and resolution warnings must be reviewed with rendered previews.",
             "",
         ]
     )
