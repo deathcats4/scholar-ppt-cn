@@ -8,12 +8,12 @@ description: >-
   variants blueprint, image-model full-slide samples, an optional full-deck per-slide image-model
   design route, or template-direct editable PPTX, followed by approved-mockup
   reconstruction and montage QA. It adds stronger
-  scientific-figure handling, role-based Chinese typography,
-  v3.3.1-aligned body-size review policy, PptxGenJS as the
+  scientific-figure handling, mockup-relative text sizing,
+  v3.3.1-aligned font-size policy, PptxGenJS as the
   default preferred new-deck writer, and deterministic final PPTX QA.
 metadata:
   version: 3.4.0
-  summary: v3.3.1 workflow with persistent per-call image-model constraints, restrained literature-report labels, editable-reconstruction icon filtering, and v3.4 scientific-figure, typography, PptxGenJS, and deterministic QA improvements.
+  summary: v3.3.1 workflow with persistent per-call image-model constraints, restrained literature-report labels, editable-reconstruction icon filtering, and v3.4 scientific-figure, mockup-relative text sizing, PptxGenJS, and deterministic QA improvements.
 ---
 
 # Scholar PPT CN Skill
@@ -36,7 +36,7 @@ Do not ask the user to understand internal route names, archetype names, or QA g
 ## Bundled reference template
 
 If the user does not provide a separate template and wants a ready visual reference, use `assets/templates/scholar-ppt-cn-reference-template.pptx` as the default academic PPT template. Treat it as a reference template for Template DNA extraction, layout rhythm, typography, color system, and reusable page structures.
-Its example text sizes and font weights are not delivery requirements. Body font-size requirements follow v3.3.1: do not enforce a universal body-point floor.
+Its example text sizes and font weights are not delivery requirements. Font-size requirements follow v3.3.1: do not enforce universal point-size floors.
 
 ## Runtime compatibility
 
@@ -326,7 +326,7 @@ For literature reports and journal-club decks, do not create presentation labels
 
 Do not rely on earlier conversation context to preserve these constraints. The mandatory per-call constraint block in `references/image_generation_efficiency_rules.md` must be inserted into every image-generation call, including pilot pages, later batches, retries, and Route C continuation calls.
 
-Raster mockup typography is only a visual approximation. Ask for a restrained modern Chinese sans-serif style visually close to Microsoft YaHei, without decorative, handwritten, outlined, shadowed, or artificially condensed lettering. Do not treat the apparent mockup text size as a real PowerPoint point size. Final editable reconstruction must set the actual font and readability policy.
+Raster mockup typography is only a visual approximation. Ask for a restrained modern Chinese sans-serif style visually close to Microsoft YaHei, without decorative, handwritten, outlined, shadowed, or artificially condensed lettering. Do not treat the apparent mockup text size as a real PowerPoint point size. Final editable reconstruction should match the mockup's relative hierarchy and page rhythm, then be tuned by rendering.
 
 Image-model text is provisional and must be checked before final delivery.
 
@@ -488,9 +488,9 @@ Default behavior when the user does not provide a conflicting official template:
 - body text, captions, sources, page numbers, and auxiliary explanations normally use regular weight;
 - do not make all Chinese text bold.
 
-For body font size, follow v3.3.1 behavior: do not enforce a universal 16 pt floor, 18-20 pt target, or body-size delivery blocker. Use the template, approved mockups, content density, and rendered readability to choose body sizes. If body text looks too small, clipped, or crowded, report it as a readability issue and revise when it materially harms the presentation.
+For font size, follow v3.3.1 behavior: do not enforce universal point-size floors, role tables, or body-size delivery blockers. Use the template, approved mockups, content density, and rendered readability to choose text sizes. In mockup-approved routes, match relative visual scale and hierarchy first, then tune after rendering the editable PPTX.
 
-Avoid using shrink-to-fit, PptxGenJS `fit: "shrink"`, OOXML `<a:normAutofit>`, or another automatic size reduction as the default way to solve crowding. When text does not fit, prefer removing repetition, shortening wording, expanding the text area, reducing secondary elements, redistributing content, or splitting the slide. If automatic shrinking is inherited from a template or existing deck, disclose it as a readability review item rather than a deterministic delivery blocker.
+Avoid using shrink-to-fit, PptxGenJS `fit: "shrink"`, OOXML `<a:normAutofit>`, or another automatic size reduction as the default way to solve crowding. When text does not fit, prefer removing repetition, shortening wording, expanding the text area, reducing secondary elements, redistributing content, or splitting the slide.
 
 ## Scientific figure and evidence handling
 
@@ -571,7 +571,7 @@ Minimum PPTX delivery contract for editable PPTX tasks:
 2. render all slides and inspect a montage when a renderer is available;
 3. check template/mockup consistency, repeated skeletons, text overflow, scientific figure readability, and internal workflow text;
 4. run deterministic static QA against the final PPTX;
-5. treat body text size, body auto-shrink, and very dense text as readability review items rather than deterministic delivery blockers;
+5. compare rendered text scale with the approved mockup or template hierarchy, and treat dense text as a visual revision issue rather than a deterministic point-size failure;
 6. revise, re-render, and rerun QA after any fix;
 7. verify that the QA report hash matches the delivered PPTX bytes.
 

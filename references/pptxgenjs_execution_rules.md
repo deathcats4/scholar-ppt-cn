@@ -51,9 +51,16 @@ const FONT_LATIN = "Times New Roman";
 
 Font constants ensure consistency; they do not imply identical size or weight.
 
-## Body Text Sizing
+## Text Sizing
 
-Body font-size requirements follow v3.3.1 behavior: do not enforce a universal 16 pt body floor or an 18-20 pt default target. Choose sizes from the user template, approved mockups, content density, and rendered readability.
+Font-size requirements follow v3.3.1 behavior: do not enforce universal point-size floors or role tables. Choose sizes from the user template, approved mockups, content density, and rendered readability.
+
+For mockup-approved routes, treat the raster mockup as a relative visual target:
+
+- match title/body/caption/source-note hierarchy by proportion and page rhythm;
+- avoid copying apparent pixel text as exact PowerPoint point sizes;
+- render the editable PPTX and adjust sizes until the visual scale matches the approved mockup;
+- prefer changing text amount, box geometry, or slide split before shrinking text away from the approved hierarchy.
 
 Avoid using automatic shrinking as the default solution for body text, research judgments, explanations, and main lists:
 
@@ -61,35 +68,25 @@ Avoid using automatic shrinking as the default solution for body text, research 
 - OOXML `<a:normAutofit>`;
 - any automatic size reduction used to fit text.
 
-When content does not fit, remove repetition, shorten sentences, reduce minor labels, expand the text area, reduce secondary images or labels, redistribute content, split the slide, or remove non-core content. If automatic shrinking is inherited from a template or existing deck, report it as a readability review item instead of failing generation.
+When content does not fit, remove repetition, shorten sentences, reduce minor labels, expand the text area, reduce secondary images or labels, redistribute content, split the slide, or remove non-core content.
 
 Recommended guarded helper pattern:
 
 ```js
-const TYPE_SIZE = Object.freeze({
-  COVER_TITLE: 36,
-  PAGE_TITLE: 30,
-  BODY: 16,
-  BODY_LARGE: 18,
-  LABEL: 17,
-  CAPTION: 13,
-  SOURCE: 10,
-  PAGE_NUMBER: 10,
-});
-
-function addBodyText(slide, text, options = {}) {
-  const fontSize = options.fontSize ?? TYPE_SIZE.BODY;
+function addBodyText(slide, text, options) {
+  if (!options?.fontSize) {
+    throw new Error("fontSize must come from the selected template/mockup layout.");
+  }
   slide.addText(text, {
     ...options,
     objectName: options.objectName ?? "BODY_text",
     fontFace: "Microsoft YaHei",
-    fontSize,
     color: options.color ?? "222222",
   });
 }
 ```
 
-Body text should not bypass shared helpers when a deck has a defined typography system. `spAutoFit` is acceptable only when it does not cause visible clipping, does not cross slide bounds, and does not overlap other objects.
+Body text should not bypass shared helpers when a deck has a defined typography system. `spAutoFit` is acceptable only when the rendered result still matches the approved hierarchy, does not clip, does not cross slide bounds, and does not overlap other objects.
 
 ## Required Post-Generation Steps
 
@@ -99,7 +96,7 @@ Body text should not bypass shared helpers when a deck has a defined typography 
 4. Fix specific failing slides.
 5. Re-render the final PPTX.
 6. Run static QA against the final file with the scenario-appropriate profile.
-7. Review body text that appears too small, clipped, overcrowded, or automatically shrunk; revise when it materially harms readability.
+7. Review rendered text scale against the approved mockup or template hierarchy; revise clipped, overcrowded, or out-of-scale slides.
 8. Re-render and rerun QA after any fix.
 9. Verify `error = 0` and the QA report hash matches the delivered file.
 

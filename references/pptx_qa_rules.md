@@ -59,9 +59,7 @@ Available profiles: `group-meeting`, `defense`, `conference`, `classroom`, and `
 - font inventory and possible substitution;
 - possible full-slide flattened image;
 - skipped rendering or visual inspection;
-- body text that appears too small, clipped, or overcrowded;
-- body text using `<a:normAutofit>` or shrink-to-fit when it may harm readability;
-- very small labels or captions that may not be readable.
+- rendered text that is clipped, overcrowded, or out of scale with the approved mockup/template hierarchy.
 
 ## Human Judgment Checks
 
@@ -70,7 +68,7 @@ After static QA passes, still inspect:
 - template/mockup adherence and deck-wide visual consistency;
 - title, header, footer, caption, and page-number consistency;
 - repeated visible skeletons;
-- text overflow, clipping, and accidental overlap;
+- text scale, overflow, clipping, and accidental overlap;
 - figure readability, including axes, legends, scale bars, panel labels, table headers, and necessary notes;
 - figure handling across `preserve`, `overview+detail`, `split`, and `cross-slide`;
 - whether final slides expose internal production language;

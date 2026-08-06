@@ -936,62 +936,16 @@ def inspect_pptx(
                                 f"slide:{slide_index}:{shape_name}",
                             )
                         )
-                    issue_path = f"slide:{slide_index}:{shape_name}"
                     sizes = _shape_font_sizes(shape)
-                    has_norm_autofit, autofit_scale = _shape_norm_autofit(shape)
+                    has_norm_autofit, _ = _shape_norm_autofit(shape)
                     role = _shape_text_role(
                         shape_name, shape_text, box, slide_height, sizes
                     )
                     if role == "body":
                         typography = details["typography"]
                         typography["body_text_boxes"] += 1
-                    if sizes:
-                        declared_min_size = min(sizes)
-                        effective_min_size = declared_min_size * autofit_scale
-
-                        if effective_min_size < 9:
-                            issues.append(
-                                Issue(
-                                    "warning",
-                                    "pptx.small_text",
-                                    f"Effective text size below 9 pt: {effective_min_size:g} pt",
-                                    issue_path,
-                                )
-                            )
-
-                        if role == "body":
-                            if has_norm_autofit:
-                                typography["body_norm_autofit"] += 1
-                                issues.append(
-                                    Issue(
-                                        "warning",
-                                        "pptx.body_autofit",
-                                        "Body text uses normAutofit/shrink-to-fit; "
-                                        f"declared {declared_min_size:g} pt, fontScale "
-                                        f"{autofit_scale:.0%}, effective {effective_min_size:g} pt",
-                                        issue_path,
-                                    )
-                                )
-                        elif role == "label" and effective_min_size < 16:
-                            issues.append(
-                                Issue(
-                                    "warning",
-                                    "pptx.label_text_too_small",
-                                    f"Label text effective size is below 16 pt: "
-                                    f"{effective_min_size:g} pt",
-                                    issue_path,
-                                )
-                            )
-                        elif role == "caption" and effective_min_size < 12:
-                            issues.append(
-                                Issue(
-                                    "warning",
-                                    "pptx.caption_text_too_small",
-                                    f"Caption effective size is below 12 pt: "
-                                    f"{effective_min_size:g} pt",
-                                    issue_path,
-                                )
-                            )
+                        if has_norm_autofit:
+                            typography["body_norm_autofit"] += 1
 
                 blip = shape.find(".//a:blip", NS)
                 rel_id = blip.attrib.get(R_ID) if blip is not None else None
@@ -1114,9 +1068,9 @@ def main() -> int:
         choices=sorted(QA_PROFILES),
         default=DEFAULT_QA_PROFILE,
         help=(
-            "Typography/QA profile. Body font-size findings follow v3.3.1 "
-            "behavior: report readability concerns without turning body size "
-            "or body auto-shrink into delivery-blocking errors."
+            "Typography/QA profile. Static QA follows v3.3.1 font-size behavior: "
+            "do not enforce point-size thresholds; review rendered text scale "
+            "against the approved mockup or template."
         ),
     )
     parser.add_argument(

@@ -7,28 +7,18 @@
 - Otherwise, default all editable Chinese and mixed CJK/Latin text to `Microsoft YaHei`.
 - Whether the current operating system has Microsoft YaHei installed does not change the declared delivery font in the PPTX. If a renderer substitutes the font during preview, disclose the substitution and do not silently rewrite the delivery file to another CJK font.
 
-## Default Sizes
+## Font Size Policy
 
-For a 16:9 deck without a user template:
-
-| Role | Default size |
-|---|---:|
-| Cover title | 32-40 pt |
-| Slide title | 28-32 pt, usually about 30 pt |
-| Body | Follow template, approved mockup, and rendered readability |
-| Defense or large-room body | Prefer larger body text when practical, but do not enforce a universal floor |
-| Secondary short label | 16-18 pt |
-| Caption | 12-14 pt |
-| Source, copyright, page number | 9-11 pt |
-
-These ranges support visual hierarchy. They are not mandatory delivery thresholds. A user template's sizes may be preserved, but visibly tiny body text should be cut, rewritten, or split across slides when it materially hurts readability.
+Do not use a fixed point-size table as the authority for reconstructed slides.
+When approved image-model mockups or a user template exist, match the visible
+hierarchy, density, line length, and relative scale in the rendered reference.
+After generating the editable PPTX, render the deck and adjust font sizes until
+the slide feels aligned with the approved mockup or template system.
 
 ## Body Size Policy
 
-For body font size, match v3.3.1 behavior: do not enforce a universal 16 pt floor, 18-20 pt target, or body-size delivery blocker. Use the user template, approved mockups, slide density, expected projection context, and rendered readability to decide whether body text is acceptable.
+For body font size, match v3.3.1 behavior: do not enforce a universal body-size floor, target range, role table, or body-size delivery blocker. Use the user template, approved mockups, slide density, expected projection context, and rendered readability to decide whether body text is acceptable.
 
-- "Effective size" means the final displayed PowerPoint size. If a text box contains `fontScale` or `<a:normAutofit>`, calculate effective size as declared size multiplied by scale when reporting readability concerns.
-- Body text using `fit: "shrink"`, `<a:normAutofit>`, or automatic size reduction should be reported for readability review, but it is not a deterministic delivery-blocking error by itself.
 - Fixed slide count, fixed layout, preserving full source text, or keeping a column width can still create readability problems; resolve important problems by shortening, expanding, redistributing, or splitting content.
 
 ## Do Not Solve Crowding by Shrinking Text
@@ -37,7 +27,7 @@ For body font size, match v3.3.1 behavior: do not enforce a universal 16 pt floo
 - When text does not fit, use this order: remove repetition -> shorten sentences -> remove minor labels -> expand the text area -> redistribute content -> split the slide.
 - Source-image text is not mechanically judged as editable body text, but it still requires visual review for projection suitability.
 
-## Text Roles and QA Floors
+## Text Roles
 
 For new PPTX generation, use object-name prefixes where possible:
 
@@ -48,7 +38,8 @@ For new PPTX generation, use object-name prefixes where possible:
 - `SOURCE_`: source and copyright;
 - `PAGE_NUMBER_`: page number.
 
-QA should use object roles first, then fall back to position, text length, and font-size heuristics. Body-size findings are readability review items, not deterministic delivery blockers. Extremely small text can still be reported as a warning for visual inspection.
+Text roles help preserve hierarchy and editability. They are not static
+font-size thresholds.
 
 ## Caption Color
 
@@ -78,14 +69,14 @@ Image-model mockups do not install or reliably reproduce a named font. A prompt 
 - Do not claim that a raster mockup actually uses Microsoft YaHei.
 - Avoid calligraphic, handwritten, decorative, outlined, shadowed, distorted, or artificially condensed lettering.
 - Use raster mockups to judge hierarchy, density, line length, and relative scale, not exact point sizes.
-- During editable reconstruction, explicitly set `fontFace: "Microsoft YaHei"` and apply the real typography thresholds in this file.
+- During editable reconstruction, explicitly set `fontFace: "Microsoft YaHei"`, then tune point sizes by rendering and comparing against the approved mockup or template rhythm.
 
 ## Final Check
 
 - Check that titles use the actual bold property.
 - Check that body text is not accidentally bolded.
-- Check whether body text is visibly too small, clipped, or overcrowded.
-- Check whether body `normAutofit` / shrink-to-fit creates visible readability problems.
+- Check whether the rendered editable text visually matches the approved mockup or template hierarchy.
+- Check whether body text is clipped, overcrowded, or visibly out of scale with the page.
 - Check that Fig./Table captions are black or dark gray by default and visually distinct from source notes.
 - Check font substitution, abnormal wrapping, Chinese punctuation, and lost hierarchy.
 - Do not modify text already baked into source images.

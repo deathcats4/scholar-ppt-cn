@@ -27,8 +27,8 @@
 - Fallback layout archetype library and Template DNA.
 - Expanded scientific-figure handling: preserve, overview+detail, split, cross-slide, not-use, and request-higher-resolution.
 - Role-based Microsoft YaHei typography instead of bolding all Chinese text.
-- Body font-size requirements follow v3.3.1: no universal body-point floor or body-size delivery blocker.
-- Body auto-shrink and `<a:normAutofit>` are reported for readability review rather than treated as delivery-blocking errors.
+- Font-size requirements follow v3.3.1: no universal point-size floor, role size table, or body-size delivery blocker.
+- Mockup-approved routes tune editable text by rendered relative hierarchy and page rhythm instead of static point thresholds.
 - PptxGenJS 4.0.1 as the default preferred writer for new decks.
 - Deterministic PPTX QA, rendering helper, QA note export, and final-file hash verification.
 - Automatic appendix-slide handling is not used.

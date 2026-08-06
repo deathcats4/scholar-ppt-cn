@@ -161,17 +161,14 @@ class GroupShapeQATests(unittest.TestCase):
         messages = "\n".join(issue["message"] for issue in report["issues"])
         paths = "\n".join(issue["path"] for issue in report["issues"])
         self.assertIn("pptx.shape_outside", codes)
-        self.assertIn("pptx.small_text", codes)
-        self.assertIn("pptx.body_autofit", codes)
         self.assertIn("pptx.low_image_ppi", codes)
         self.assertIn("pptx.possible_text_overlap", codes)
         self.assertIn("Group 1 / BODY_GroupedOutside", messages)
         self.assertIn("Group 1 / GroupedPicture", paths)
-        self.assertIn("Group 1 / BODY_GroupedSmall", messages)
         self.assertEqual(report["details"]["typography"]["body_text_boxes"], 3)
         self.assertEqual(report["details"]["typography"]["body_norm_autofit"], 1)
 
-    def test_small_body_autofit_is_warning_not_error(self) -> None:
+    def test_small_body_autofit_does_not_create_static_size_warning(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             pptx = Path(tmp) / "small-body.pptx"
             write_body_autofit_fixture(pptx)
@@ -180,9 +177,10 @@ class GroupShapeQATests(unittest.TestCase):
 
         codes = {issue["code"] for issue in report["issues"]}
         self.assertEqual(report["summary"]["error"], 0)
-        self.assertEqual(report["status"], "passed-with-warnings")
-        self.assertIn("pptx.small_text", codes)
-        self.assertIn("pptx.body_autofit", codes)
+        self.assertNotIn("pptx.small_text", codes)
+        self.assertNotIn("pptx.body_autofit", codes)
+        self.assertEqual(report["details"]["typography"]["body_text_boxes"], 1)
+        self.assertEqual(report["details"]["typography"]["body_norm_autofit"], 1)
 
 
 if __name__ == "__main__":

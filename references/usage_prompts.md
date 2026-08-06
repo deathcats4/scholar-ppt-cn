@@ -52,7 +52,7 @@
 ## Direct full production with v3.4 quality checks
 
 ```text
-请使用 $scholar-ppt-cn，沿用 v3.3.1 的生产规划表和 mockup family + variants 流程制作可编辑 PPTX。科研图保持原始比例和必要标注，正文字号沿用 v3.3.1 口径，不设置统一点数阻断；正文过小、拥挤或自动缩字时作为可读性问题复核。完成后渲染全稿、检查 montage，并运行最终 PPTX QA。
+请使用 $scholar-ppt-cn，沿用 v3.3.1 的生产规划表和 mockup family + variants 流程制作可编辑 PPTX。科研图保持原始比例和必要标注，字号沿用 v3.3.1 口径，不设置统一点数阻断或角色字号表；mockup 路线按渲染后的相对视觉比例对齐字号。完成后渲染全稿、检查 montage，并运行最终 PPTX QA。
 ```
 
 ## Full-deck per-slide image-model route
