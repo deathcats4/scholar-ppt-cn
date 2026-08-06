@@ -15,7 +15,7 @@ Required columns:
 7. core message;
 8. selected layout archetype ID;
 9. density level: low / medium / high;
-10. asset handling: preserve / overview+detail / split / request higher resolution;
+10. asset handling: preserve / overview+detail / split / cross-slide / not-use / request-higher-resolution;
 11. notes and risk: fact check, readability, translation, missing asset, etc.
 
 The table should be concise and useful. It should not prescribe exact geometry coordinates or become a rigid script.

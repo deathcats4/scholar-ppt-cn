@@ -1,0 +1,9 @@
+{
+  "name": "scholar-ppt-cn",
+  "private": true,
+  "version": "3.4.0",
+  "description": "v3.3.1 Chinese academic PPT workflow with v3.4 figure, typography, default PptxGenJS, and QA improvements",
+  "dependencies": {
+    "pptxgenjs": "4.0.1"
+  }
+}

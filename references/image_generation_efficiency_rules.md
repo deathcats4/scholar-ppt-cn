@@ -4,15 +4,15 @@ Use these rules when generating image-model slide mockups.
 
 ## Why
 
-Full 16:9 academic slide mockups are slow because each page asks the image model to solve composition, typography, template identity, evidence placeholders, and Chinese/English visual hierarchy at once. Long batches increase the chance of timeouts, reconnects, inconsistent style, and wasted generations.
+Full 16:9 academic slide mockups are slow because each page asks the image model to solve composition, typography, template identity, evidence placeholders, and Chinese/English visual hierarchy at once. Long batches and long conversations also increase prompt drift: early restrictions may lose weight while recently approved visual details become over-generalized.
 
 ## Default batching
 
 - First generate 1-2 pilot mockups only.
-- Use the pilot to test Template DNA, title system, figure/text ratio, and whether unwanted institutional labels or placeholder text appear.
+- Use the pilot to test Template DNA, title system, figure/text ratio, unwanted commercial icons, prohibited labels, and whether placeholder text appears.
 - After the pilot is acceptable, continue in batches of 2-3 pages.
 - For 5-8 requested sample pages, split into at least two batches.
-- For more than 8 sample pages, recommend switching to editable PPTX generation after representative samples are approved.
+- For more than 8 sample pages, Route A should normally switch to editable PPTX after representative samples are approved. Route C continues only after explicit activation.
 
 ## Page selection
 
@@ -22,39 +22,67 @@ Prioritize pages that test different layout risks:
 - one large evidence figure page;
 - one dense multi-panel figure page;
 - one chart or quantitative interpretation page;
-- one mechanism/discussion page;
+- one discussion page using real source evidence;
 - one conclusion page.
 
 Avoid generating multiple pages that test the same skeleton unless the user specifically needs alternatives.
 
-## Prompt strategy
+## Mandatory per-call constraint block
 
-Keep each image prompt focused on one slide page.
+Insert the following constraints into every image-generation call, including pilot pages, later batches, individual retries, and Route C continuation calls. Do not assume the model will remember them from earlier turns. Adapt only the slide-specific content; keep the restrictions intact.
 
-Include:
+```text
+Generate exactly one complete, front-facing 16:9 academic slide filling the image canvas. Do not generate a grid, contact sheet, storyboard overview, multiple alternatives, device frame, gallery, or perspective presentation.
 
-- 16:9 full-slide mockup;
-- template tone and palette;
+Follow the approved pilot and the assigned mockup family/variant for composition, hierarchy, palette, alignment, and whitespace. Design this slide only.
+
+Use supplied real scientific evidence or a neutral placeholder. Do not invent, redraw, simplify, or complete mechanisms, reaction pathways, scientific models, experimental workflows, causal arrows, numerical results, micrographs, charts, mineral structures, or other scientific content. Do not create a simple mechanism diagram. If a source mechanism figure exists, reserve space for or use the real source figure rather than redrawing it. Ordinary arrows are allowed only for reading order or source-verified relationships.
+
+Do not add light bulbs, books, document icons, people, globes, eyes, targets, trophies, puzzle pieces, gears, check marks, exclamation badges, microscope silhouettes, laboratory-flask icons, hammers, emoji, cartoons, 3D icons, or similar commercial-course decoration. Do not add cards, badges, dashed boxes, gradients, icon matrices, or bottom conclusion strips merely to fill space or repeat a style.
+
+For literature-report slides, do not add the labels 读图要点、读图结论、关键认识、综合判断、支持证据、注意事项、证据观察、预期输出、本文切口、证据页 1/2、基于论文证据的结构化归纳. 核心问题 and 结论 are allowed. State other supported content directly without editorial labels.
+
+Use a restrained modern Chinese sans-serif appearance visually close to Microsoft YaHei. Raster text is provisional; prioritize hierarchy and density rather than pretending to set exact PowerPoint point sizes.
+```
+
+## Slide-specific prompt content
+
+After the mandatory block, add only the information needed for the current slide:
+
+- slide number and title;
+- communication task and core message from the production planning table;
 - selected mockup family/variant;
-- rough source-asset geometry;
-- intended visual hierarchy;
-- requirement that evidence figures are readable placeholders and will be replaced by real source assets during editable PPTX reconstruction;
-- instruction to avoid fake university names, fake logos, and visible internal workflow terms.
+- source-asset identity and geometry;
+- required evidence placement and readable region;
+- source-supported caption or conclusion text;
+- any verified arrows or relationships;
+- approved-pilot visual references.
 
-Avoid:
+Do not ask one prompt to create many unrelated pages.
 
-- asking one image prompt to create many unrelated slide pages;
-- demanding accurate paper figure content from memory;
-- putting final Chinese body text into image mockups when it will later be rebuilt as editable text;
-- using image mockups as final PPT backgrounds.
+## Per-page acceptance gate
+
+Inspect every generated page before continuing. A page fails and must be regenerated when any of the following is present:
+
+1. more than one slide, a grid, thumbnail sheet, device frame, or perspective presentation;
+2. a prohibited commercial icon, emoji, cartoon, or decorative symbol;
+3. a prohibited literature-report label;
+4. a newly invented mechanism node, scientific arrow, number, figure, or conclusion;
+5. unreadable evidence regions or altered source identity;
+6. clear drift from the approved pilot's visual system.
+
+Do not proceed to the next batch while a failed page remains. Do not crop a failed grid or manually hide a failed element and then call the mockup approved.
+
+## Approval semantics
+
+When the user says a mockup is acceptable, treat that as approval of composition, hierarchy, image/text ratio, palette, alignment, whitespace, and page rhythm. It is not automatic approval of commercial icons, emoji, decorative symbols, prohibited labels, model-created mechanism graphics, or scientific claims that cannot be traced to the source.
 
 ## Delivery behavior
 
 After each batch, briefly report:
 
 - generated page numbers;
-- obvious issues to correct in the next batch;
+- failed pages and the exact reason for regeneration;
 - whether the visual system is stable enough to continue.
 
-If generation becomes slow or reconnect-prone, stop after the current completed batch and offer to continue with the next batch or switch to editable PPTX reconstruction.
-
+If generation becomes slow or reconnect-prone, stop after the current completed batch and continue with the same mandatory constraint block in the next call.
