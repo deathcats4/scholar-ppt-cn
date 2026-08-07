@@ -318,7 +318,7 @@ It may decide:
 
 It may adapt layout according to content. It may use left-image/right-text when that is genuinely the best solution. It must not use the same skeleton lazily for the whole deck.
 
-The image model must not invent, complete, redraw, or simplify scientific mechanisms, reaction pathways, experimental workflows, causal arrows, quantitative trends, mineral or biological structures, or other scientific claims. This includes so-called “simple mechanism diagrams”. If the source already contains a mechanism figure, use the real source figure as an evidence asset; do not ask the image model to reinterpret or redraw it. A newly drawn editable mechanism diagram is allowed only after an explicit user request and verification of every node and relationship against the source material. Ordinary arrows remain allowed for reading order or source-supported relationships.
+The image model may design or simplify a mechanism diagram when the slide plan supplies a source-grounded mechanism blueprint: every scientific node, process, arrow, and conclusion must be traceable to the source material. The image model may decide composition and visual expression, but it must not add, complete, or alter scientific content. If the source already contains a mechanism figure, preserve the real figure as evidence; a simplified editable explanation may accompany it when the simplification remains traceable. Cross-source synthesis, inference, or a proposed hypothesis must be labeled as such and confirmed by the user before it is presented as a scientific conclusion. Ordinary arrows remain allowed for reading order or source-supported relationships.
 
 Default academic visual language should rely on real evidence, typography, alignment, whitespace, restrained rules, and source-supported arrows. Do not add commercial-infographic or training-course decoration such as light bulbs, books, document icons, people silhouettes, globes, eyes, targets, trophies, puzzle pieces, gears, check marks, exclamation badges, microscope silhouettes, laboratory-flask icons, hammers, emoji, cartoons, or 3D icons. This restriction applies even when similar decoration appeared in an earlier generated mockup.
 
@@ -351,7 +351,7 @@ For Route C, approval of the pilot pages starts full-deck per-slide generation. 
 
 Once the user approves mockups, enter locked visual system internally.
 
-Approved mockups become the valid visual source for reconstruction and expansion. Approval normally covers composition, image/text proportion, hierarchy, palette, alignment, whitespace, and page rhythm. It does not automatically approve generic commercial icons, emoji, decorative symbols, prohibited literature-report labels, image-model-created mechanism graphics, or scientific content that cannot be traced to the source.
+Approved mockups become the valid visual source for reconstruction and expansion. Approval normally covers composition, image/text proportion, hierarchy, palette, alignment, whitespace, and page rhythm. It does not automatically approve generic commercial icons, emoji, decorative symbols, prohibited literature-report labels, or scientific content that cannot be traced to the source. Source-grounded mechanism graphics remain provisional until their nodes and relationships are checked against the mechanism blueprint.
 
 Expansion must preserve:
 
@@ -471,7 +471,7 @@ Use editable objects for:
 
 Insert source figures, tables, screenshots, and other evidence assets as image objects unless the user explicitly requests redrawing.
 
-Editable reconstruction inherits the approved mockup's composition, hierarchy, palette, alignment, whitespace, and evidence placement. It must not copy prohibited commercial icons, emoji, decorative symbols, prohibited literature-report labels, or image-model-created scientific diagrams. This rule applies whether those elements appear as Unicode text, emoji, icon fonts, PowerPoint shapes, SVG, PNG, or cropped parts of the mockup.
+Editable reconstruction inherits the approved mockup's composition, hierarchy, palette, alignment, whitespace, and evidence placement. It must not copy prohibited commercial icons, emoji, decorative symbols, prohibited literature-report labels, or unsupported scientific content. Rebuild source-grounded mechanism diagrams from the verified blueprint rather than trusting raster labels or copying mockup pixels. This rule applies whether those elements appear as Unicode text, emoji, icon fonts, PowerPoint shapes, SVG, PNG, or cropped parts of the mockup.
 
 Do not paste a full-slide mockup image as the final PPT slide background.
 

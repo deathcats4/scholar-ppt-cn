@@ -73,7 +73,7 @@ After static QA passes, still inspect:
 - figure handling across `preserve`, `overview+detail`, `split`, and `cross-slide`;
 - whether final slides expose internal production language;
 - whether commercial icons were recreated with PowerPoint shapes or embedded images, which static text QA cannot reliably identify;
-- whether a mechanism diagram or scientific arrow was created without source verification;
+- whether a mechanism diagram or scientific arrow lacks source verification, or presents an inference/hypothesis as an established conclusion;
 - whether cards or bottom conclusion strips are repeated mechanically across the deck.
 
 If rendering or another required tool is unavailable, state the limitation and perform the strongest available substitute check.

@@ -22,7 +22,7 @@ Approval does not automatically cover:
 
 - generic commercial icons, emoji, or decorative symbols;
 - prohibited literature-report labels;
-- image-model-created mechanism diagrams or scientific illustrations;
+- source-grounded mechanism diagrams whose nodes or relationships have not yet been checked against their blueprint;
 - scientific numbers, relationships, arrows, or conclusions that cannot be traced to source material;
 - raster text spelling or exact font appearance.
 

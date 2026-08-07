@@ -32,13 +32,14 @@ Do not assume that constraints stated earlier in a long conversation will remain
 
 ## Scientific-content boundary
 
-The image model designs the page composition; it does not author scientific content.
+The image model designs page composition and may visualize a verified mechanism blueprint; it does not decide scientific content.
 
-- Do not invent or complete mechanisms, reaction pathways, experimental workflows, causal relationships, quantitative trends, or scientific structures.
-- Do not generate a “simple mechanism diagram”. Simple-looking nodes and arrows can still create unsupported scientific claims.
-- Do not redraw a scientific figure from memory or create a plausible-looking replacement for missing evidence.
+- Allow a simplified mechanism, pathway, workflow, or conceptual diagram when every node, process, arrow, condition, and conclusion is supplied from the source material.
+- Do not invent, complete, or alter causal relationships, quantitative trends, scientific structures, or experimental conditions.
+- Do not redraw a scientific data figure from memory or create a plausible-looking replacement for missing evidence.
 - Use real supplied evidence when available. Otherwise use a neutral evidence placeholder with no fabricated data, labels, micrographs, curves, or mechanism details.
-- If the source contains a mechanism figure, use that real source figure as an evidence asset. Do not ask the image model to reinterpret or redraw it.
+- If the source contains a mechanism figure, preserve that real figure as evidence. A source-grounded simplified explanation may accompany it instead of replacing it silently.
+- Cross-source synthesis, inference, or a proposed hypothesis must be clearly labeled and confirmed by the user before final delivery.
 - Ordinary arrows are allowed for reading order and for relationships already verified in the source material.
 
 ## Academic visual restraint

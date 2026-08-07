@@ -39,7 +39,7 @@ First understand the research question, evidence relationships, figure geometry,
 - Slide titles, explanations, lines, color blocks, ordinary reading arrows, and source-verified diagrams should remain editable when practical.
 - Do not flatten a whole slide into an image and call it editable.
 - Do not recreate commercial-course icons or emoji with Unicode text, icon fonts, basic shapes, SVG, or PNG.
-- Do not redraw an image-model-created simple mechanism diagram. Use the real source figure, or create a verified editable diagram only after explicit user instruction.
+- Rebuild source-grounded mechanism diagrams from a verified blueprint; do not trust raster labels or add unsupported nodes and arrows. Preserve a source mechanism figure as evidence when one exists, while allowing a traceable simplified editable explanation to accompany it.
 - For literature reports, do not insert the prohibited editorial labels defined in `visible_text_filter_rules.md`.
 
 Define font constants centrally in generator code, but do not create a fixed page-geometry template:

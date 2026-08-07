@@ -9,7 +9,7 @@
 - Defined mockup approval as approval of composition and visual system, not automatic approval of icons, labels, or unsupported scientific content.
 - Prohibited commercial-course icons and emoji from editable reconstruction across Unicode, icon fonts, PowerPoint shapes, SVG, PNG, and cropped mockup fragments.
 - For literature reports, disallowed editorial labels such as 读图要点、关键认识、综合判断、支持证据、注意事项、证据观察、预期输出、本文切口 while retaining 核心问题 and 结论.
-- Prohibited image-model-created simple mechanism diagrams; retained ordinary reading arrows and source-supported relationship arrows.
+- Allowed source-grounded mechanism simplification and editable reconstruction while prohibiting unsupported nodes, causal relationships, quantities, or conclusions; inference and cross-source synthesis require labeling and user confirmation.
 - Clarified that cards and bottom conclusion strips are selective components, not mandatory deck-wide repetition.
 - Narrowed deterministic visible-text QA to internal workflow terms, the user-selected prohibited labels, model self-reference, placeholders, prohibited icon glyphs, and icon fonts.
 - Added an explicit, non-default full-deck per-slide image-model route.
@@ -20,7 +20,7 @@
 - Required exactly one complete front-facing 16:9 slide per image-model mockup.
 - Rejected four-grid, nine-grid, contact-sheet, storyboard-sheet, multi-thumbnail, multi-alternative, device-frame, gallery, and perspective outputs.
 - Required separate image outputs for multiple pages and prohibited cropping grid cells into approved samples.
-- Added academic mockup restraint: image models design page composition but may not invent scientific mechanisms or evidence.
+- Added academic mockup restraint: image models may visualize verified mechanism blueprints but may not invent scientific mechanisms or evidence.
 - Disabled generic commercial-infographic icons and production-facing labels by default in image-model samples.
 - Clarified that raster mockup typography is provisional; actual Microsoft YaHei and rendered readability policy apply during editable reconstruction.
 - Bundled editable reference-template workflow.

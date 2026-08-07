@@ -25,6 +25,8 @@ Multi-panel figures, dense image grids, dense charts, long tables, and mechanism
 
 High-risk splitting, cross-slide explanation, or replacement of core evidence must be confirmed or clearly disclosed. Derived assets must not silently replace original evidence.
 
+A source-grounded simplified mechanism diagram may accompany an original mechanism figure or source-supported text when it improves explanation. Keep every node and relationship traceable, preserve the original evidence, and label cross-source synthesis, inference, or a proposed hypothesis before asking the user to confirm it.
+
 Do not treat local crops generated from a full figure as a default capability. If a full figure is dense or poorly proportioned, prefer full preservation, cross-slide explanation, existing independent panels, higher-resolution requests or omission.
 
 ## When There Are Too Many or Too-Small Figures

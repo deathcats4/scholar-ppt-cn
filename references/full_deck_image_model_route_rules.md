@@ -38,11 +38,11 @@ Do not crop cells from a grid and treat them as individual mockups.
 
 All rules in `mockup_exploration_rules.md`, `evidence_asset_rules.md`, and `visible_text_filter_rules.md` apply to every generated page.
 
-The image model designs composition only. It must not invent mechanisms, data, evidence, or explanatory relationships, including “simple mechanism diagrams”. Use verified real evidence or neutral placeholders. If the source contains a mechanism figure, use the real source figure rather than asking the image model to redraw it.
+The image model may design composition and visualize a supplied source-grounded mechanism blueprint. It must not invent or alter mechanisms, data, evidence, or explanatory relationships. Use verified real evidence or neutral placeholders. If the source contains a mechanism figure, preserve it as evidence; a traceable simplified explanation may accompany it. Clearly label cross-source synthesis, inference, or a proposed hypothesis and obtain user confirmation before final delivery.
 
 ## Approval scope
 
-Approval of pilot pages or a full mockup set normally approves composition, hierarchy, image/text ratio, palette, alignment, whitespace, and page rhythm. It does not automatically approve commercial icons, emoji, decorative symbols, prohibited literature-report labels, model-created mechanism graphics, or scientific claims that cannot be traced to source material.
+Approval of pilot pages or a full mockup set normally approves composition, hierarchy, image/text ratio, palette, alignment, whitespace, and page rhythm. It does not automatically approve commercial icons, emoji, decorative symbols, prohibited literature-report labels, or scientific claims that cannot be traced to source material. Verify mechanism graphics against the supplied blueprint before reconstruction.
 
 ## Approval and continuation
 

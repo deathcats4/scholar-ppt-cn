@@ -65,7 +65,11 @@ For literature reports and journal-club decks, do not use these presentation lab
 
 ## Mechanism and arrow policy
 
-Do not reconstruct an image-model-created “simple mechanism diagram”. If the source contains a mechanism figure, insert the real source figure. Create a new editable mechanism diagram only after an explicit user request and verification of every node and relationship against the source.
+Create or reconstruct an editable mechanism diagram when every scientific node, process, arrow, condition, and conclusion is traceable to the source material. The agent may proactively simplify and organize source-supported relationships when that improves the presentation; an explicit user request is not required.
+
+If the source contains a mechanism figure, preserve the real figure as evidence. A simplified editable explanation may accompany it, but must not silently replace or contradict it. Rebuild from the verified mechanism blueprint rather than copying raster labels or trusting image-model details.
+
+Cross-source synthesis, inference, or a proposed hypothesis is allowed only when clearly labeled and confirmed by the user before final delivery. Keep a concise element-to-source mapping in the slide plan or work record.
 
 Ordinary arrows are allowed for reading order and source-supported relationships. They must not create new scientific causality.
 

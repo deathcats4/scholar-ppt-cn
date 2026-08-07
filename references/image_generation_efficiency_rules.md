@@ -36,7 +36,7 @@ Generate exactly one complete, front-facing 16:9 academic slide filling the imag
 
 Follow the approved pilot and the assigned mockup family/variant for composition, hierarchy, palette, alignment, and whitespace. Design this slide only.
 
-Use supplied real scientific evidence or a neutral placeholder. Do not invent, redraw, simplify, or complete mechanisms, reaction pathways, scientific models, experimental workflows, causal arrows, numerical results, micrographs, charts, mineral structures, or other scientific content. Do not create a simple mechanism diagram. If a source mechanism figure exists, reserve space for or use the real source figure rather than redrawing it. Ordinary arrows are allowed only for reading order or source-verified relationships.
+Use supplied real scientific evidence or a neutral placeholder. A mechanism diagram may be designed or simplified only from the supplied source-grounded mechanism blueprint. Preserve every verified scientific node, process, arrow, condition, and conclusion; do not add, complete, or alter scientific content. If a source mechanism figure exists, preserve it as evidence; a simplified explanatory diagram may accompany it when every element remains traceable. Cross-source synthesis, inference, or a proposed hypothesis must be visibly labeled and must not be presented as an established result. Ordinary arrows are allowed for reading order or source-verified relationships.
 
 Do not add light bulbs, books, document icons, people, globes, eyes, targets, trophies, puzzle pieces, gears, check marks, exclamation badges, microscope silhouettes, laboratory-flask icons, hammers, emoji, cartoons, 3D icons, or similar commercial-course decoration. Do not add cards, badges, dashed boxes, gradients, icon matrices, or bottom conclusion strips merely to fill space or repeat a style.
 
@@ -55,6 +55,7 @@ After the mandatory block, add only the information needed for the current slide
 - source-asset identity and geometry;
 - required evidence placement and readable region;
 - source-supported caption or conclusion text;
+- source-grounded mechanism blueprint and element-to-source mapping, when used;
 - any verified arrows or relationships;
 - approved-pilot visual references.
 
@@ -67,7 +68,7 @@ Inspect every generated page before continuing. A page fails and must be regener
 1. more than one slide, a grid, thumbnail sheet, device frame, or perspective presentation;
 2. a prohibited commercial icon, emoji, cartoon, or decorative symbol;
 3. a prohibited literature-report label;
-4. a newly invented mechanism node, scientific arrow, number, figure, or conclusion;
+4. an unsupported mechanism node, scientific arrow, number, figure, or conclusion, or an unlabeled inference/hypothesis;
 5. unreadable evidence regions or altered source identity;
 6. clear drift from the approved pilot's visual system.
 
@@ -75,7 +76,7 @@ Do not proceed to the next batch while a failed page remains. Do not crop a fail
 
 ## Approval semantics
 
-When the user says a mockup is acceptable, treat that as approval of composition, hierarchy, image/text ratio, palette, alignment, whitespace, and page rhythm. It is not automatic approval of commercial icons, emoji, decorative symbols, prohibited labels, model-created mechanism graphics, or scientific claims that cannot be traced to the source.
+When the user says a mockup is acceptable, treat that as approval of composition, hierarchy, image/text ratio, palette, alignment, whitespace, and page rhythm. It is not automatic approval of commercial icons, emoji, decorative symbols, prohibited labels, or scientific claims that cannot be traced to the source. Verify source-grounded mechanism graphics against their blueprint before reconstruction.
 
 ## Delivery behavior
 
