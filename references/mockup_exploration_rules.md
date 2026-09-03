@@ -19,7 +19,7 @@ When several pages are requested, generate them as separate image outputs or sep
 
 A multi-slide grid is a failed output. Discard and regenerate it as independent full-slide images; do not crop grid cells and treat them as approved samples.
 
-The image model may make composition decisions inside the selected archetype family, but it must preserve:
+Make composition decisions inside the selected archetype family while preserving:
 - narrative purpose;
 - source asset identity;
 - evidence integrity;
@@ -28,7 +28,7 @@ The image model may make composition decisions inside the selected archetype fam
 
 ## Persistent per-call constraints
 
-Do not assume that constraints stated earlier in a long conversation will remain active. Every image-generation call, including retries and later Route C batches, must repeat the mandatory per-call constraint block in `image_generation_efficiency_rules.md`.
+Insert the mandatory per-call constraint block from `image_generation_efficiency_rules.md` into every image-generation call, including retries and Route C batches.
 
 ## Scientific-content boundary
 
@@ -38,7 +38,7 @@ The image model designs page composition and may visualize a verified mechanism 
 - Do not invent, complete, or alter causal relationships, quantitative trends, scientific structures, or experimental conditions.
 - Do not redraw a scientific data figure from memory or create a plausible-looking replacement for missing evidence.
 - Use real supplied evidence when available. Otherwise use a neutral evidence placeholder with no fabricated data, labels, micrographs, curves, or mechanism details.
-- If the source contains a mechanism figure, preserve that real figure as evidence. A source-grounded simplified explanation may accompany it instead of replacing it silently.
+- If the source contains a mechanism figure, preserve that real figure as evidence. A source-grounded simplified explanation may accompany it without replacing it.
 - Cross-source synthesis, inference, or a proposed hypothesis must be clearly labeled and confirmed by the user before final delivery.
 - Ordinary arrows are allowed for reading order and for relationships already verified in the source material.
 
@@ -48,7 +48,9 @@ Default to real evidence, typography, whitespace, alignment, restrained dividers
 
 Do not add generic decorative icons or commercial-infographic devices, including light bulbs, books, document icons, people silhouettes, globes, eyes, targets, trophies, puzzle pieces, gears, check marks, exclamation badges, microscope silhouettes, laboratory-flask icons, hammers, emoji, cartoons, or 3D icons.
 
-Do not add decorative cards, gradients, dashed boxes, badges, icon matrices, or colored ribbons merely to fill empty space. Use containers only when they organize genuine categories, comparisons, or process stages. Cards and bottom conclusion strips are not default components and should not recur on every slide.
+Cards, gradients, dashed boxes, badges, icon matrices, ribbons, rounded containers, shadows, and conclusion strips may follow the user template, Template DNA, the selected family/variant, or the page composition. Keep their geometry, spacing, and visual treatment coherent across the deck.
+
+Preserve image aspect ratio. Fit images into containers with deliberate alignment, coordinated backgrounds, and balanced padding. Do not leave accidental blank strips, thin exposed gaps, or visibly uneven padding. Preserve the complete context of scientific evidence; crop decorative photos only when the composition requires it.
 
 For literature reports and journal-club decks, do not use presentation labels such as:
 - 读图要点;

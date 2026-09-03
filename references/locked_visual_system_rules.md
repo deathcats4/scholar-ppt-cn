@@ -4,7 +4,7 @@ After the user approves mockups, enter locked visual system internally.
 
 Approved mockups become the valid design source for reconstruction and expansion.
 
-Approval normally covers:
+Lock:
 
 - composition and page-region structure;
 - image/text proportion;
@@ -18,7 +18,7 @@ Approval normally covers:
 - footer/page number;
 - approximate density, whitespace rhythm, and cross-slide pacing.
 
-Approval does not automatically cover:
+Exclude:
 
 - generic commercial icons, emoji, or decorative symbols;
 - prohibited literature-report labels;
@@ -26,4 +26,4 @@ Approval does not automatically cover:
 - scientific numbers, relationships, arrows, or conclusions that cannot be traced to source material;
 - raster text spelling or exact font appearance.
 
-Locked visual system is not a fixed stencil. Slides may adapt composition inside the approved system. Cards and bottom conclusion strips are not mandatory recurring components merely because one approved page used them.
+Slides may adapt composition inside the approved system. Record cards, conclusion strips, gradients, borders, rounded containers, and shadows as fixed, recurring, or optional components according to the approved mockups.

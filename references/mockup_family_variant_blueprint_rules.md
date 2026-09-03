@@ -1,14 +1,10 @@
 # Mockup Family + Variants Blueprint Rules
 
-This stage comes after the production planning table and before image generation or PPTX construction.
+Create this blueprint after the production planning table and before image generation or PPTX construction.
 
-It is a visual-system bridge.
+## Required structure
 
-## Purpose
-
-The blueprint groups planned slides into reusable visual families and defines multiple variants inside each family.
-
-It stabilizes the deck without forcing every slide into the same layout.
+Group planned slides into reusable visual families and define multiple variants inside each family.
 
 ## Required outputs
 
@@ -100,7 +96,11 @@ Every planned slide must map to:
 
 ### 5. Representative sample selection
 
-Choose 5-8 slides for visual sample generation.
+Select representative coverage by route:
+
+- Route A: choose 5-8 slides for visual sample generation;
+- Route B: choose 5-8 slides for archetype-coverage and QA review without image generation;
+- Route C: choose 5-8 slides for coverage review and designate 1-2 of them as pilot pages before full-deck per-slide generation.
 
 The selection should cover:
 
@@ -115,6 +115,7 @@ The selection should cover:
 ## Rules
 
 - The family blueprint should not generate images or PPTX.
+- For non-strict template-based creation, derive families and variants from communication tasks, evidence geometry, density, and deck rhythm. Do not derive them by cataloging or matching the template's native full-page layouts.
 - It should not overfit to one geometry.
 - Left-image/right-text is allowed but cannot be the default for every evidence page.
 - Dense figures should use overview + detail zoom or split pages.

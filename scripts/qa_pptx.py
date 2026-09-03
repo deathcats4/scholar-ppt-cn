@@ -41,7 +41,6 @@ QA_PROFILES: dict[str, dict[str, Any]] = {
     },
     "template-preserve": {
         "strict_projection": False,
-        "allow_legacy_icon_fonts": True,
     },
 }
 TEXT_ROLE_PREFIXES = {
@@ -61,7 +60,6 @@ INTERNAL_TERMS = (
     "qa note",
     "qa 说明",
     "qa说明",
-    "archetype",
     "版式原型",
     "mockup-derived",
     "internal route",
@@ -74,8 +72,6 @@ INTERNAL_TERMS = (
     "来源缺口",
     "design rationale",
     "设计理由",
-    "reading order",
-    "阅读顺序",
     "risk level",
     "风险等级",
     "candidate plan",
@@ -86,9 +82,11 @@ INTERNAL_TERMS = (
     "project.json",
     "system prompt",
     "系统指令",
-    "提示词",
     "pptxgenjs",
     "python-pptx",
+    "视觉底稿",
+    "user-supplied reference ppt",
+    "reference ppt for visual style",
 )
 
 DISALLOWED_PRESENTATION_LABELS = (
@@ -156,7 +154,7 @@ DISALLOWED_ICON_GLYPHS = (
     "↻",
 )
 
-DISALLOWED_ICON_FONT_MARKERS = (
+REVIEW_ICON_FONT_MARKERS = (
     "wingdings",
     "webdings",
     "font awesome",
@@ -173,6 +171,38 @@ EVIDENCE_PAGE_LABEL_PATTERN = re.compile(
 EDITORIAL_WARNING_PREFIX_PATTERN = re.compile(
     r"^\s*(?:提示|注意)\s*[：:]", re.IGNORECASE
 )
+INTERNAL_ROUTE_PATTERN = re.compile(r"\broute\s+[abc]\b", re.IGNORECASE)
+VISIBLE_PRODUCTION_NOTE_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    (
+        "figure-handling label",
+        re.compile(r"(?:图件处理|图片处理|面板处理|figure handling)\s*[：:]", re.IGNORECASE),
+    ),
+    (
+        "production/design note label",
+        re.compile(
+            r"(?:制作说明|设计说明|排版说明|封面设计|页面设计|裁切说明|生产备注|"
+            r"production note|design note|layout note)\s*[：:]",
+            re.IGNORECASE,
+        ),
+    ),
+    (
+        "cropping-purpose commentary",
+        re.compile(
+            r"(?:经|已|进行)?(?:机械)?裁切.{0,16}(?:用于|以便|为了)"
+            r"(?:保留|突出|展示|提高|改善)",
+            re.IGNORECASE,
+        ),
+    ),
+    (
+        "slide-design narration",
+        re.compile(
+            r"(?:封面|本页|该页|页面|幻灯片).{0,24}"
+            r"(?:下方为|使用|采用|放置).{0,48}"
+            r"(?:视觉线索|设计语言|版式|布局|前后呼应)",
+            re.IGNORECASE,
+        ),
+    ),
+)
 
 
 def _visible_policy_hits(text: str) -> list[tuple[str, str]]:
@@ -186,6 +216,9 @@ def _visible_policy_hits(text: str) -> list[tuple[str, str]]:
     for term in MODEL_META_TERMS:
         if term in normalized:
             hits.append(("model-meta", term))
+    for label, pattern in VISIBLE_PRODUCTION_NOTE_PATTERNS:
+        if pattern.search(text):
+            hits.append(("production-note", label))
     return hits
 
 
@@ -822,17 +855,26 @@ def inspect_pptx(
                             f"slide:{slide_index}",
                         )
                     )
+            route_match = INTERNAL_ROUTE_PATTERN.search(text)
+            if route_match:
+                issues.append(
+                    Issue(
+                        "error",
+                        "pptx.internal_term",
+                        f"Visible internal workflow term: {route_match.group(0)}",
+                        f"slide:{slide_index}",
+                    )
+                )
             for hit_type, value in _visible_policy_hits(text):
-                code = (
-                    "pptx.disallowed_presentation_label"
-                    if hit_type == "label"
-                    else "pptx.model_meta_language"
-                )
-                message = (
-                    f"Disallowed presentation label: {value}"
-                    if hit_type == "label"
-                    else f"Visible model/generation language: {value}"
-                )
+                if hit_type == "label":
+                    code = "pptx.disallowed_presentation_label"
+                    message = f"Disallowed presentation label: {value}"
+                elif hit_type == "production-note":
+                    code = "pptx.visible_production_note"
+                    message = f"Visible slide-production commentary: {value}"
+                else:
+                    code = "pptx.model_meta_language"
+                    message = f"Visible model/generation language: {value}"
                 issues.append(
                     Issue(
                         "error",
@@ -847,19 +889,17 @@ def inspect_pptx(
                 if typeface:
                     font_names.add(typeface)
                     folded_typeface = typeface.casefold()
-                    if any(marker in folded_typeface for marker in DISALLOWED_ICON_FONT_MARKERS):
+                    is_bullet_font = node.tag == f"{{{NS['a']}}}buFont"
+                    if not is_bullet_font and any(
+                        marker in folded_typeface for marker in REVIEW_ICON_FONT_MARKERS
+                    ):
                         icon_fonts_on_slide.add(typeface)
             for typeface in sorted(icon_fonts_on_slide, key=str.casefold):
-                icon_font_severity = (
-                    "warning"
-                    if profile_rules.get("allow_legacy_icon_fonts")
-                    else "error"
-                )
                 issues.append(
                     Issue(
-                        icon_font_severity,
-                        "pptx.disallowed_icon_font",
-                        f"Disallowed icon or emoji font used: {typeface}",
+                        "warning",
+                        "pptx.review_icon_font",
+                        f"Review symbol or icon font use outside ordinary bullet markers: {typeface}",
                         f"slide:{slide_index}",
                     )
                 )
@@ -1068,9 +1108,8 @@ def main() -> int:
         choices=sorted(QA_PROFILES),
         default=DEFAULT_QA_PROFILE,
         help=(
-            "Typography/QA profile. Static QA follows v3.3.1 font-size behavior: "
-            "do not enforce point-size thresholds; review rendered text scale "
-            "against the approved mockup or template."
+            "Typography/QA profile. Static QA does not enforce point-size thresholds; "
+            "review rendered text scale against the approved mockup or template."
         ),
     )
     parser.add_argument(

@@ -17,6 +17,6 @@ For each archetype, record:
 - suitable content types;
 - forbidden misuse.
 
-Do not encode prohibited commercial icons, emoji, decorative symbols, literature-report labels, or unsupported scientific graphics as fixed archetype elements. A source-grounded mechanism graphic may define an adaptable diagram region, but its scientific content must come from the current slide's verified blueprint rather than from the earlier raster mockup.
+Do not encode prohibited commercial icons, emoji, decorative symbols, literature-report labels, or unsupported scientific graphics as fixed archetype elements. A source-grounded mechanism graphic may define an adaptable diagram region. Populate its scientific content from the current slide's verified blueprint.
 
-Do not turn cards or bottom conclusion strips into mandatory deck-wide components merely because they appeared in one approved mockup.
+Record cards, conclusion strips, gradients, borders, rounded containers, and shadows as fixed, recurring, or optional components according to the approved visual system.

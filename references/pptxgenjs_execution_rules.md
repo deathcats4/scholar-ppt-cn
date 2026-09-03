@@ -4,7 +4,7 @@
 
 Use PptxGenJS as the default preferred writer when creating a new editable PPTX from papers, reports, figures, or slide plans.
 
-Default does not mean mandatory. Use another tool when:
+Use another tool when:
 
 - Node.js or PptxGenJS is unavailable;
 - the task requires in-place modification of an existing PPTX and another tool better preserves masters, animations, complex charts, or special objects;
@@ -16,44 +16,39 @@ When PptxGenJS is unavailable, the default fallback is python-pptx.
 
 ## Separate Executor and Designer
 
-PptxGenJS creates PowerPoint objects and saves the PPTX. It does not decide slide design.
+Use PptxGenJS to create PowerPoint objects and save the PPTX. Select the design from the production plan, Template DNA, family/variant mapping, and approved mockups.
 
-Do not default to these patterns merely because they are easy to code:
-
-- left image and right text;
-- three cards;
-- white figure plates;
-- identical title/content skeletons on every slide;
-- fixed column widths or fixed-coordinate templates.
-
-First understand the research question, evidence relationships, figure geometry, and selected v3.3.1 production route. Then implement the chosen design with PptxGenJS. Route B may use the user template, bundled reference template, and Template DNA. Route A may use approved generated full-slide mockups and user-provided references.
+Select page structures from the research question, communication task, evidence relationships, figure geometry, production plan, family/variant mapping, and approved mockups. Use Template DNA to style those structures, not to supply full-page geometry. Rotate compatible structures across the deck. Route B may use the user template or bundled reference template for canvas, visual identity, theme, recurring decoration, and reusable micro-components; use native full-slide layouts only when the user explicitly requests original-layout preservation. Route A may use approved generated full-slide mockups and user-provided references.
 
 ## Default Generation Conventions
 
 - Default canvas is 16:9 unless a user template or explicit user requirement says otherwise.
 - Editable Chinese and mixed CJK/Latin text uses `Microsoft YaHei`.
-- Slide titles, section titles, key conclusions, and necessary emphasis use `bold: true`.
-- Body, captions, sources, and page numbers use regular weight.
-- Scientific figures are placed proportionally and normally receive no outer border, outline, white card, or shadow.
-- Images must not be stretched to fill a slot.
+- Select font weights from the user template, Template DNA, approved mockups, content hierarchy, and rendered readability.
+- All-bold, regular-weight, and mixed-weight systems are allowed when they form a coherent hierarchy.
+- Cards, borders, rounded containers, gradients, and shadows may follow the selected visual system.
+- Preserve image aspect ratio and required scientific context.
+- Fit images with deliberate alignment, coordinated backgrounds, and balanced padding.
+- Reject stretched images, accidental blank strips, thin exposed gaps, and visibly uneven padding.
+- Resize the container or revise the layout when an evidence image does not fit cleanly.
 - Slide titles, explanations, lines, color blocks, ordinary reading arrows, and source-verified diagrams should remain editable when practical.
 - Do not flatten a whole slide into an image and call it editable.
 - Do not recreate commercial-course icons or emoji with Unicode text, icon fonts, basic shapes, SVG, or PNG.
 - Rebuild source-grounded mechanism diagrams from a verified blueprint; do not trust raster labels or add unsupported nodes and arrows. Preserve a source mechanism figure as evidence when one exists, while allowing a traceable simplified editable explanation to accompany it.
 - For literature reports, do not insert the prohibited editorial labels defined in `visible_text_filter_rules.md`.
 
-Define font constants centrally in generator code, but do not create a fixed page-geometry template:
+Define font constants centrally in generator code. Select page geometry from the production plan and visual system:
 
 ```js
 const FONT_CN = "Microsoft YaHei";
 const FONT_LATIN = "Times New Roman";
 ```
 
-Font constants ensure consistency; they do not imply identical size or weight.
+Use font constants consistently. Select size and weight from the text hierarchy and rendered layout.
 
 ## Text Sizing
 
-Font-size requirements follow v3.3.1 behavior: do not enforce universal point-size floors or role tables. Choose sizes from the user template, approved mockups, content density, and rendered readability.
+Do not enforce universal point-size floors or role tables. Choose sizes from the user template, approved mockups, content density, and rendered readability.
 
 For mockup-approved routes, treat the raster mockup as a relative visual target:
 
@@ -100,4 +95,4 @@ Body text should not bypass shared helpers when a deck has a defined typography 
 8. Re-render and rerun QA after any fix.
 9. Verify `error = 0` and the QA report hash matches the delivered file.
 
-Successful PptxGenJS execution only proves that a file was generated. It does not prove that the slides passed visual review.
+Complete the required rendering and QA steps after every generated file.

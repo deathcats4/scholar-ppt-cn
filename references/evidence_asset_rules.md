@@ -10,11 +10,16 @@ Scientific figures default to:
 
 - use the clearest available source image;
 - preserve original aspect ratio and context;
-- sit directly on the slide without extra borders, outlines, cards, white plates, rounded containers, or shadows;
+- use cards, borders, rounded containers, gradients, and shadows when selected by the user template, Template DNA, approved mockups, or the page design;
+- fit the figure to its container with deliberate alignment, coordinated background treatment, and balanced padding;
+- reject stretched figures, accidental blank strips, thin exposed gaps, and visibly uneven padding;
+- resize the container or revise the layout when the complete figure does not fit cleanly;
 - keep axes, legends, units, scale bars, panel labels, table headers, and explanatory context visible;
-- avoid decorative masks;
-- distinguish multiple figures through whitespace, alignment, numbering, and concise captions instead of putting every figure in a frame;
+- apply masks only after visual review confirms that required evidence remains visible;
+- distinguish multiple figures through the selected visual system, whitespace, alignment, numbering, and concise captions;
 - avoid automatic "highlight region" cropping.
+
+Decorative photos may use fill-crop placement. Scientific evidence uses full-context placement unless a reviewed crop preserves all required evidence and is recorded in the handling plan.
 
 Multi-panel figures, dense image grids, dense charts, long tables, and mechanisms may require panel-level explanation, cross-slide explanation, or `overview+detail`. When using derived assets or existing detail images:
 
@@ -44,7 +49,7 @@ Do not shrink many figures into unreadable thumbnails merely to show that the so
 
 ## Use Only Necessary Scientific Annotations
 
-Do not add reading tutorials beside figures, such as instructions about where to look or what a color means. The slide should become clear through composition and evidence selection.
+Do not add reading tutorials beside figures, such as instructions about where to look or what a color means. Use composition and evidence selection to establish the reading path.
 
 Add short annotations only when they clarify scientific objects or relationships, such as sample groups, reaction directions, key stages, or statistical intervals. Annotations must come from actual visual review, not guesses from titles or captions. They must not obscure data or invent trends absent from the source.
 

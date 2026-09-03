@@ -1,8 +1,8 @@
 {
   "name": "scholar-ppt-cn",
   "private": true,
-  "version": "3.4.0",
-  "description": "v3.3.1 Chinese academic PPT workflow with v3.4 figure, typography, default PptxGenJS, and QA improvements",
+  "version": "3.4.6",
+  "description": "Chinese academic PPT workflow with scientific-figure handling, editable generation, and deterministic QA",
   "dependencies": {
     "pptxgenjs": "4.0.1"
   }

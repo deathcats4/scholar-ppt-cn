@@ -12,7 +12,7 @@ Inherit:
 - restrained lines, boxes, and source-supported arrows;
 - evidence placement and caption/source-note behavior.
 
-Approval of a mockup does not mean every visible object is approved. Do not copy prohibited decoration or unsupported scientific content merely because it appeared in the raster sample.
+Inherit approved visual elements. Exclude prohibited decoration and unsupported scientific content from raster samples.
 
 ## Editable objects
 
@@ -37,12 +37,14 @@ Insert source figures, tables, screenshots, and other evidence assets as image o
 
 Do not reproduce generic commercial-course icons or decorative symbols from the mockup, including light bulbs, books, document icons, people silhouettes, globes, eyes, targets, trophies, puzzle pieces, gears, check marks, exclamation badges, microscope silhouettes, laboratory-flask icons, hammers, emoji, cartoons, or 3D icons.
 
-This restriction applies regardless of implementation:
+Filter the following implementations:
 - Unicode or emoji text;
 - icon fonts such as Wingdings, Webdings, Font Awesome, Material Icons, or emoji fonts;
 - PowerPoint basic shapes assembled into an icon;
 - SVG or PNG icons;
 - cropped fragments of the mockup image.
+
+Ordinary typographic bullets and template-derived symbols, including Wingdings bullet markers, are allowed when they render consistently and do not depict prohibited commercial-course decoration.
 
 If a prohibited icon occupied useful space in the mockup, preserve the layout role but replace the icon with direct academic text, a number, real evidence, a restrained divider, or whitespace.
 
@@ -67,14 +69,14 @@ For literature reports and journal-club decks, do not use these presentation lab
 
 Create or reconstruct an editable mechanism diagram when every scientific node, process, arrow, condition, and conclusion is traceable to the source material. The agent may proactively simplify and organize source-supported relationships when that improves the presentation; an explicit user request is not required.
 
-If the source contains a mechanism figure, preserve the real figure as evidence. A simplified editable explanation may accompany it, but must not silently replace or contradict it. Rebuild from the verified mechanism blueprint rather than copying raster labels or trusting image-model details.
+If the source contains a mechanism figure, preserve the real figure as evidence. A simplified editable explanation may accompany it without replacing or contradicting it. Rebuild the explanation from the verified mechanism blueprint. Do not copy raster labels or unverified image-model details.
 
 Cross-source synthesis, inference, or a proposed hypothesis is allowed only when clearly labeled and confirmed by the user before final delivery. Keep a concise element-to-source mapping in the slide plan or work record.
 
 Ordinary arrows are allowed for reading order and source-supported relationships. They must not create new scientific causality.
 
-## Cards and conclusion strips
+## Visual components and image containers
 
-Cards may be used when the content genuinely contains parallel categories, comparisons, or independent units. They are not a default filler device.
+Cards, conclusion strips, gradients, dashed boxes, badges, ribbons, rounded containers, borders, and shadows may follow the user template, Template DNA, approved mockups, or the page composition.
 
-Bottom conclusion strips may be used selectively on conclusion pages, section synthesis pages, or rare high-value pages. Do not repeat one on every slide merely to imitate a visual style.
+Preserve image aspect ratio. Fit images into containers with deliberate alignment, coordinated backgrounds, and balanced padding. Reject accidental blank strips, thin exposed gaps, and visibly uneven padding. Preserve the complete context of scientific evidence; crop decorative photos only when the composition requires it.
