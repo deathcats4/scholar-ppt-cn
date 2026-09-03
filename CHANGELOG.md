@@ -1,84 +1,38 @@
 # Changelog
 
+本文件按版本记录主要变化。旧版本记录保持简要，重点放在当前版本能做什么。
+
+## 3.4.6
+
+- 重新组织技能主文档：先判断任务类型，再按需加载对应规则，主文档更短、上手更快。
+- 新增"已有 PPTX 修订"路径：支持**局部修订**（改指定页的字、图、版式）与**整篇统一修订**（批量替换术语、统一字体/页码/来源注等），改动范围之外的内容保持不动。
+- 新增"源 PPT 延续"路径：在已有可编辑 PPTX 上继续做新内容时，直接复用原模板的主题、版式、页眉页脚等原生视觉资产，只替换为新课题的材料。
+- 继续支持三种新稿制作方式：先出整页视觉样板再重建、直接生成可编辑 PPTX、以及（仅在明确要求时）全套逐页生图后再重建。
+- 明确科学底线：新材料的叙事和证据由新材料决定，不默认照搬旧稿的正文页版式；图片原样保留、不编造数据、不加课件风装饰。
+- 配套更新：内置参考模板、QA 脚本与多条执行细则。
+
 ## 3.4.0
 
-- Released the zip-based v3.4 workflow as the stable `scholar-ppt-cn` skill.
-- Preserved the v3.3.1 production flow: production planning table, mockup family + variants, representative image-model samples, optional full-deck per-slide image-model design, template-direct editable PPTX, approved-mockup expansion, and montage QA.
-- Added a mandatory short constraint block to every image-generation call, retry, and later Route C batch to reduce long-context drift.
-- Added per-page acceptance gates before continuing to the next image batch.
-- Defined mockup approval as approval of composition and visual system, not automatic approval of icons, labels, or unsupported scientific content.
-- Prohibited commercial-course icons and emoji from editable reconstruction across Unicode, icon fonts, PowerPoint shapes, SVG, PNG, and cropped mockup fragments.
-- For literature reports, disallowed editorial labels such as 读图要点、关键认识、综合判断、支持证据、注意事项、证据观察、预期输出、本文切口 while retaining 核心问题 and 结论.
-- Allowed source-grounded mechanism simplification and editable reconstruction while prohibiting unsupported nodes, causal relationships, quantities, or conclusions; inference and cross-source synthesis require labeling and user confirmation.
-- Clarified that cards and bottom conclusion strips are selective components, not mandatory deck-wide repetition.
-- Narrowed deterministic visible-text QA to internal workflow terms, the user-selected prohibited labels, model self-reference, placeholders, prohibited icon glyphs, and icon fonts.
-- Added an explicit, non-default full-deck per-slide image-model route.
-- Required explicit user intent before every slide is generated as an independent mockup.
-- Kept one slide per generated image; grids and storyboard sheets remain invalid.
-- Added pilot approval, batched full-deck generation, complete mockup montage review, and slide-by-slide editable reconstruction.
-- Clarified that generic requests to finish or expand the deck do not activate the full-deck image-model route.
-- Required exactly one complete front-facing 16:9 slide per image-model mockup.
-- Rejected four-grid, nine-grid, contact-sheet, storyboard-sheet, multi-thumbnail, multi-alternative, device-frame, gallery, and perspective outputs.
-- Required separate image outputs for multiple pages and prohibited cropping grid cells into approved samples.
-- Added academic mockup restraint: image models may visualize verified mechanism blueprints but may not invent scientific mechanisms or evidence.
-- Disabled generic commercial-infographic icons and production-facing labels by default in image-model samples.
-- Clarified that raster mockup typography is provisional; actual Microsoft YaHei and rendered readability policy apply during editable reconstruction.
-- Bundled editable reference-template workflow.
-- Fallback layout archetype library and Template DNA.
-- Expanded scientific-figure handling: preserve, overview+detail, split, cross-slide, not-use, and request-higher-resolution.
-- Role-based Microsoft YaHei typography instead of bolding all Chinese text.
-- Font-size requirements follow v3.3.1: no universal point-size floor, role size table, or body-size delivery blocker.
-- Mockup-approved routes tune editable text by rendered relative hierarchy and page rhythm instead of static point thresholds.
-- PptxGenJS 4.0.1 as the default preferred writer for new decks.
-- Deterministic PPTX QA, rendering helper, QA note export, and final-file hash verification.
-- Automatic appendix-slide handling is not used.
+- 稳定 v3.3.1 的完整生产流程：生产规划表 → mockup family + variants → 视觉样板 / 模板直出 / 全稿逐页生图（需明确选择）→ 可编辑重建 → montage QA。
+- 每次生图调用强制重复注入学术约束，减少长上下文漂移；批次之间有验收门槛。
+- 明确 mockup 获批仅代表构图与视觉系统获批，不代表图标、标签或未经来源支持的科学内容自动获批。
+- 禁止从可编辑重建中带回灯泡、书本、emoji 等商业课件图标（含 Unicode、图标字体、形状、SVG、PNG 等形式）。
+- 文献汇报默认不用"读图要点、关键认识、综合判断"等栏目标签；保留"核心问题"和"结论"。
+- 允许基于来源蓝图的机制图简化，禁止增改节点、因果、数值或结论；推断与跨文献综合需标注并获用户确认。
+- 完善科研图片处理：preserve / overview+detail / split / cross-slide / not-use / request-higher-resolution。
+- 中文字体按角色使用字重（微软雅黑），不再通篇加粗；不设统一点数下限。
+- 新建 PPTX 默认首选 PptxGenJS 4.0.1；新增确定性 PPTX QA、渲染检查与最终哈希验证。
 
 ## 3.3.1
 
-Improved compatibility for file-based generation, preview inspection, and QA.
-
-### Added
-- Runtime compatibility rules for environments with or without file and PPTX tooling.
-- Explicit reference loading map in `SKILL.md`.
-- PPTX QA contract.
-- Image-generation batching rules to avoid long, fragile multi-page mockup runs.
-
-### Changed
-- Image-model sample generation now defaults to 1-2 pilot pages followed by 2-3 page batches.
+- 兼容有无文件/PPTX 工具的环境：能真实生成、渲染、检查就做；工具不可用时不假装检查通过，只交付当前可完成的产物并说明缺失步骤。
+- 生图样板默认先出 1–2 页 pilot，确认后再按 2–3 页小批量推进。
 
 ## 3.3.0-productized-planned-family
 
-Added a mandatory mockup family + variants blueprint stage between production planning and generation.
-
-### Added
-- Template DNA reconfirmation before mockup family construction.
-- Mockup family summary table.
-- Multiple variants per family.
-- Slide-to-family/variant mapping for every planned slide.
-- Representative sample selection.
-- Dedicated reference: `mockup_family_variant_blueprint_rules.md`.
-
-### Changed
-- Image-model samples now follow both the production planning table and the mockup family + variants blueprint.
-- Template-direct editable PPTX also uses the family/variant blueprint for visual consistency.
-- High-frequency families must define 4-6 variants to reduce repetitive pages.
+- 在规划表与生成之间加入 mockup family + variants 蓝图阶段，保证整套视觉系统稳定而不单调。
 
 ## 3.2.0-productized-planned-archetype
 
-Restored planning, but redefined it as a production planning table.
-
-### Added
-- Production planning table as central pre-generation artifact.
-- Planning table fields: narrative section, communication task, source asset, source-asset geometry, core message, layout archetype ID, density, asset handling, risks.
-- Hidden narrative presets now include:
-  - literature report / journal club;
-  - thesis / defense;
-  - research progress;
-  - general topical presentation.
-- Detailed fallback layout archetype library remains required for template-direct generation.
-- Image-model samples now follow the planning table while retaining composition freedom inside selected archetypes.
-
-### Clarified
-- Planning table is not an old-style rigid slide outline.
-- Narrative presets control story order; layout archetypes control structure; Template DNA controls visual identity.
-- User-provided outline overrides hidden presets.
+- 将规划重构为"生产规划表"，连接叙事顺序、沟通任务、素材几何、版式原型、密度与风险。
+- 增加四种隐藏叙事预设：文献汇报 / journal club、论文答辩、研究进展、通识主题报告；用户给定大纲时优先遵循用户结构。
