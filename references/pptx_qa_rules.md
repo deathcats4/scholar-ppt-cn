@@ -74,7 +74,7 @@ python scripts/verify_final_qa.py deck.pptx qa-report.json --require-profile gro
 - possible text-box overlap;
 - font inventory and possible substitution;
 - symbol or icon fonts used outside ordinary bullet markers;
-- possible full-slide flattened image;
+- possible full-slide flattened image, including a large image with native text overlays or a slide-level picture background;
 - skipped rendering or visual inspection;
 - rendered text that is clipped, overcrowded, or out of scale with the approved mockup/template hierarchy.
 
@@ -93,5 +93,9 @@ After static QA passes, still inspect:
 - whether commercial icons were recreated with PowerPoint shapes or embedded images, which static text QA cannot reliably identify;
 - whether a mechanism diagram or scientific arrow lacks source verification, or presents an inference/hypothesis as an established conclusion;
 - whether recurring visual components match the selected template or approved visual system.
+
+For image reconstruction, resolve large-image warnings against the reference and the region's editability policy. They flag candidates for review, not automatic failures of legitimate large evidence figures. Independently compare expected native text and preserved regions; adding a text box does not establish meaningful editability. Slide-level picture backgrounds are checked directly; confirm inherited master/layout imagery visually as well.
+
+For compound objects and node-connected arrows, use `editable_object_structure_rules.md`. Inspect a saved copy after moving a representative group: its labels should follow, and connected arrows should remain attached. Distinguish verified XML bindings from behavior tested in the target presentation application. Run final rendering and hash-bound QA after any structural postprocessing.
 
 If rendering or another required tool is unavailable, state the limitation and perform the strongest available substitute check.

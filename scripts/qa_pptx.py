@@ -633,6 +633,18 @@ def _intersection_ratio(
     return intersection / smaller
 
 
+def _slide_visible_coverage(
+    box: tuple[int, int, int, int], slide_width: int, slide_height: int
+) -> float:
+    """Return the fraction of the slide covered by the visible part of a shape."""
+    if slide_width <= 0 or slide_height <= 0:
+        return 0.0
+    x, y, width, height = box
+    visible_width = max(0, min(x + width, slide_width) - max(x, 0))
+    visible_height = max(0, min(y + height, slide_height) - max(y, 0))
+    return (visible_width * visible_height) / (slide_width * slide_height)
+
+
 def inspect_pptx(
     path: Path,
     project: dict[str, Any] | None = None,
@@ -1007,17 +1019,32 @@ def inspect_pptx(
                                     )
                                 )
 
-            if not text and slide_width and slide_height and len(picture_boxes) == 1:
-                picture_name, picture_box = picture_boxes[0]
-                _px, _py, picture_width, picture_height = picture_box
-                coverage = (picture_width * picture_height) / max(slide_width * slide_height, 1)
-                if coverage >= 0.9:
+            if slide_width and slide_height:
+                for picture_name, picture_box in picture_boxes:
+                    coverage = _slide_visible_coverage(
+                        picture_box, slide_width, slide_height
+                    )
+                    if coverage < 0.9:
+                        continue
                     issues.append(
                         Issue(
                             "warning",
                             "pptx.possible_flattened_slide",
-                            "Slide appears to be a single near-full-slide image; verify editability",
+                            "A picture visibly covers at least 90% of the slide and may be a flattened slide even when editable overlays exist; verify editability manually",
                             f"slide:{slide_index}:{picture_name}",
+                        )
+                    )
+
+                background_blip = root.find(
+                    ".//p:cSld/p:bg/p:bgPr//a:blip", NS
+                )
+                if background_blip is not None:
+                    issues.append(
+                        Issue(
+                            "warning",
+                            "pptx.possible_flattened_slide",
+                            "Slide uses an image fill in its own background properties; verify editability manually",
+                            f"slide:{slide_index}:background-image",
                         )
                     )
 

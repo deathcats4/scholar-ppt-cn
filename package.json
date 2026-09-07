@@ -1,7 +1,7 @@
 {
   "name": "scholar-ppt-cn",
   "private": true,
-  "version": "3.5.0",
+  "version": "3.5.1",
   "description": "Chinese academic PPT workflow with scientific-figure handling, editable generation, and deterministic QA",
   "files": [
     "SKILL.md",

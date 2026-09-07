@@ -7,7 +7,7 @@ description: >-
   mockups, template-based editable PPTX generation, editable reconstruction,
   rendering, and final QA.
 metadata:
-  version: 3.5.0
+  version: 3.5.1
   summary: Chinese academic PPT planning, visual design, editable reconstruction, rendering, and deterministic QA.
 ---
 
@@ -117,6 +117,7 @@ Read each reference completely when its stage or route becomes active. Do not lo
 ### Image-reference reconstruction and editable PPTX
 
 - Image-to-editable reconstruction: `references/image_to_editable_reconstruction_rules.md`
+- Compound objects and node-connected arrows: `references/editable_object_structure_rules.md` (when building numbered nodes, label containers, or connected diagrams)
 
 ### Approved-mockup expansion and editable PPTX
 
@@ -159,6 +160,7 @@ Use this path when the user provides one or more flattened slide images and asks
 - Use the image for layout, hierarchy, geometry, and visual reference; use supplied source text, data, and original assets as content truth.
 - Inventory objects before construction and assign an editability policy per region. Default to meaningful SMART editability, preserve complete visual assets when their internal structure is coupled, and deep-edit only reliable or explicitly requested regions.
 - Build page-level text, containers, lines, arrows, callouts, and verified diagrams as native PowerPoint objects. Keep source figures, screenshots, complex charts, and complete visual assets as independent image objects unless reliable source structure or data supports a redraw.
+- Group compound editable objects and bind node-connected arrows using `references/editable_object_structure_rules.md`; verify these structures with a representative edit before claiming they move together.
 - Generate the editable PPTX with the preferred writer, render every slide, compare the result to the reference image, and run the final PPTX QA. Do not use the full-page reference image as the final slide background.
 
 This path has no separate visual-pilot approval unless the user asks for a new visual design. For multi-slide reconstruction or a new deck, use the production-path summary before the PPTX write; a named single-slide repair can remain within the localized revision boundary when it does not expand into redesign.

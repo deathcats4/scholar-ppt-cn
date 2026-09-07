@@ -47,8 +47,8 @@ Follow this sequence before claiming that an image has been converted:
    ```
 
    Coordinates should be stable slide coordinates, not an accumulation of image-pixel guesses. When starting from pixels, map them proportionally: `x = x_px / image_width * slide_width`, and likewise for `y`, `width`, and `height`.
-6. **Rebuild native objects.** Use PptxGenJS 4.0.1 for new decks, or the writer required by source-deck continuation. Keep page-level structure editable and preserve atomic assets as independent images.
-7. **Render and compare.** Render every slide, inspect the montage and affected pages, compare against the reference image, fix geometry or typography drift, then run deterministic PPTX QA and hash verification.
+6. **Rebuild native objects.** Use PptxGenJS 4.0.1 for new decks, or the writer required by source-deck continuation. Keep page-level structure editable and preserve atomic assets as independent images. For compound objects and node-connected arrows, follow `editable_object_structure_rules.md` before rendering the final candidate.
+7. **Render and compare.** Render every slide and compare it side by side with the reference at matching canvas dimensions. Inspect individual text and image regions as well as the montage; correct font scale, wrapping, geometry, crop and layering against the source. Verify the planned native text and preserved assets separately, exercise a representative compound object, then run deterministic PPTX QA and hash verification.
 
 ## Editability policies
 
@@ -83,7 +83,7 @@ When reliably identifiable, rebuild these as editable PowerPoint objects:
 - simple lines, arrows, callouts, highlights, and reading-order connectors;
 - verified diagrams whose nodes, relationships, conditions, labels, and conclusions are supported by source material.
 
-Use meaningful text boxes and logical groups. Do not create one text box per character or one shape per pixel.
+Use meaningful text boxes and logical groups. A numbered circle includes its number; a panel tab includes its background and text. Preserve separately replaceable evidence images. Follow `editable_object_structure_rules.md` for grouping and native connection bindings; object naming alone does not make components move together.
 
 ### Atomic visual assets: preserve as independent images by default
 
@@ -159,10 +159,13 @@ After reconstruction, check all of the following against the reference and the s
 ### Editability and maintenance
 
 - page-level text and structure can be edited directly;
+- numbered nodes and labels move with their constituent text; node-connected arrows carry native endpoint bindings, with actual application behavior distinguished from XML-only inspection;
 - preserved assets can be selected, moved, replaced, cropped, or deleted;
 - requested DEEP EDIT regions are appropriately structured;
 - PRESERVE regions remain whole;
 - SELECTIVE EDIT changes stay within the requested boundary;
 - no full-slide screenshot is masquerading as a reconstructed deck.
+
+A large-image warning still needs review when native text is present. Compare the flagged region with the input and its assigned policy: a legitimate preserved scientific figure may occupy most of a page, while a page screenshot with text overlays does not fulfill reconstruction. Static QA passing is not proof that required regions are editable.
 
 Deliver the editable `.pptx`, rendered previews when available, `qa-report.json`, and a concise note listing preserved complete assets, source-dependent regions, unresolved text/data, and skipped checks. If the required vision, writer, renderer, or QA tool is unavailable, provide the strongest available reconstruction blueprint and state exactly what was not executed.

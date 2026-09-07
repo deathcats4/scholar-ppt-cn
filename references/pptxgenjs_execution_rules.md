@@ -85,6 +85,8 @@ Body text should not bypass shared helpers when a deck has a defined typography 
 
 ## Required Post-Generation Steps
 
+When the page contains compound objects or node-connected arrows, follow `editable_object_structure_rules.md` before final rendering. Assign stable `objectName` values during generation; use native writer support or the bundled structural postprocessor to create actual groups and connection bindings. Plain named shapes and visually adjacent lines do not provide this behavior.
+
 1. Save the PPTX.
 2. Render all slides when a renderer is available.
 3. Inspect the full montage.
