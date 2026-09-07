@@ -1,8 +1,17 @@
 {
   "name": "scholar-ppt-cn",
   "private": true,
-  "version": "3.4.6",
+  "version": "3.5.0",
   "description": "Chinese academic PPT workflow with scientific-figure handling, editable generation, and deterministic QA",
+  "files": [
+    "SKILL.md",
+    "LICENSE",
+    "package-lock.json",
+    "agents/",
+    "assets/",
+    "references/",
+    "scripts/*.py"
+  ],
   "dependencies": {
     "pptxgenjs": "4.0.1"
   }

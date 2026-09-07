@@ -1,6 +1,6 @@
 # Fallback Layout Archetype Library
 
-Use this library for production planning, template-direct editable generation, and fallback pages when approved mockups are unavailable.
+Use this library for detailed layout selection during template-direct editable generation and for fallback pages when approved mockups are unavailable. Production planning records layout intent / candidate structure rather than selecting from this library by ID.
 
 Keep it internal. Select archetypes without asking the user to choose them manually.
 

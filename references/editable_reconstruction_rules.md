@@ -1,5 +1,7 @@
 # Editable Reconstruction Rules
 
+When the visual source is a flattened image rather than an editable mockup or source deck, also read `image_to_editable_reconstruction_rules.md`. That reference defines image-specific object classification and editability boundaries; the rules below remain the shared contract for native objects, scientific safeguards, and asset handling.
+
 The final PPTX should be editable.
 
 ## What to inherit from approved mockups

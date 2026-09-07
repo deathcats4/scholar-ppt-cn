@@ -6,3 +6,8 @@ __pycache__/
 *.bak
 dist/
 outputs/
+# Golden-case PDFs are local inputs, not versioned artifacts.
+docs/evals/golden-cases/materials/
+# Evaluation protocols, manifests, and run records are development-only.
+docs/evals/
+tools/evals/

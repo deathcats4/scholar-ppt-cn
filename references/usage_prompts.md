@@ -4,7 +4,13 @@
 
 ```text
 请使用 $scholar-ppt-cn，参考模板和材料，先生成生产规划表。
-规划表需要包含：页码、标题、叙事段落、页面任务、使用素材、图件形态、核心信息、版式 archetype、密度、素材处理建议和风险。
+规划表需要包含：页码、标题、叙事段落、页面任务、使用素材、图件形态、核心信息、布局意图/候选结构、密度、素材处理建议和风险。不要在规划表中锁定 family、variant 或 archetype ID；这些在后续蓝图阶段确定。
+```
+
+## Let the skill confirm a complex production path first
+
+```text
+这是一个复杂制作任务。请先用普通话回显：目标与范围、材料和证据、模板如何使用、将采用的制作路径、下一处停点、交付物和关键假设；如果有会改变结果的歧义，先等我确认，再开始生成或渲染。
 ```
 
 ## Make samples after planning
@@ -17,6 +23,30 @@
 
 ```text
 按确认的生产规划表，不要生图，直接参考模板生成可编辑 PPT。
+```
+
+## Rebuild a flattened slide image into an editable PPTX
+
+```text
+请把我提供的 PPT 图片 / 截图重建成视觉尽量接近、但具有实际意义可编辑性的 PPTX。页面标题、正文、页脚、色块、线条和页面级结构请优先做成原生 PowerPoint 对象；完整科研图、截图和复杂视觉素材默认作为独立图片保留，不要把整页截图铺成背景。请先按图片重建规则判断对象颗粒度，再生成 PPTX、渲染对比并运行最终 QA。
+```
+
+## Rebuild with mixed editability boundaries
+
+```text
+请把这页图片重建成可编辑 PPTX。默认采用 SMART：页面层文字和结构可编辑，完整视觉资产整体保留。指定区域“不要拆”，指定区域“内部也尽量可编辑”，只处理我点名的区域；不要猜测图片中的数据、事实或机制关系。
+```
+
+## Preserve a complete asset
+
+```text
+这块内容作为一张完整视觉素材保留，只需要能移动、缩放、裁切、替换和删除；不要 OCR 后重排内部文字，也不要重画内部图例和线条。
+```
+
+## Deep-edit a reliable region
+
+```text
+这块图内部也要尽量可编辑。请只在文字、形状、连接线、表格或图示结构能够可靠核对时拆解；没有原始数据或来源支持的部分保留为独立图片，不要为了增加对象数量而猜测。
 ```
 
 ## Expand from approved samples

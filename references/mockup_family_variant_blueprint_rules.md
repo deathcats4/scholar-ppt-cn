@@ -1,6 +1,6 @@
 # Mockup Family + Variants Blueprint Rules
 
-Create this blueprint after the production planning table and before image generation or PPTX construction.
+Create this blueprint after the production planning table and before image generation or PPTX construction. Treat each planning-table layout intent / candidate structure as an input to this stage; resolve it here into the required family and variant, and add a detailed archetype when that level of specificity is useful.
 
 ## Required structure
 
@@ -93,6 +93,8 @@ Every planned slide must map to:
 - backup variant;
 - reason for choice;
 - readability risk.
+
+The mapping is the handoff point from planning intent to concrete composition. It may refine, combine, or reject a candidate structure when the evidence geometry, density, neighboring-slide rhythm, or approved visual system requires it. Keep the reason for the refinement visible in the mapping rather than forcing a premature archetype ID into the planning table.
 
 ### 5. Representative sample selection
 
